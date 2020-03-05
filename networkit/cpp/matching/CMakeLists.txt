@@ -1,4 +1,6 @@
 networkit_add_module(matching
+    DynamicSuitorMatcher.cpp
+    SuitorMatcher.cpp
     LocalMaxMatcher.cpp
     Matcher.cpp
     Matching.cpp
