@@ -22,7 +22,7 @@ namespace NetworKit {
  */
 class SuitorMatcher: public Matcher {
 public:
-	SuitorMatcher(const Graph& G);
+	SuitorMatcher(Graph& G);
 
 	void findSuitor(node u);
 	void matchSuitor(node v);
@@ -39,7 +39,6 @@ private:
 	int64_t z = G->upperNodeIdBound();
 	std::vector<node> suitor;
 	std::vector<edgeweight> ws;
-	std::vector< std::multimap <edgeweight, node, std::greater<edgeweight> > > neighbors;
 
 };
 
