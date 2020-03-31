@@ -9,7 +9,7 @@
 
 namespace NetworKit {
 
-SuitorMatcher::SuitorMatcher(const Graph& G): Matcher(G)
+SuitorMatcher::SuitorMatcher(Graph& G): Matcher(G)
 {
 	if (G.isDirected()) throw std::runtime_error("Matcher only defined for undirected graphs");
 
@@ -21,14 +21,7 @@ SuitorMatcher::SuitorMatcher(const Graph& G): Matcher(G)
 		ws.push_back(0);
 
 	//presorted neighbors of each node
-	for (int i=0; i<z; i++)
-	{
-		std::multimap <edgeweight, node, std::greater<edgeweight> > currMap;
-		for (auto neigh: G.neighborRange(i))
-			currMap.insert(std::make_pair(G.weight(i, neigh),neigh));
-
-		neighbors.push_back(currMap);
-	}
+	G.sortOutEdgesByWeight(std::greater<edgeweight>());
 
 }
 
@@ -69,13 +62,12 @@ void SuitorMatcher::findSuitor(node v)
 		edgeweight heaviest = ws[v];
 
 		//look for the heaviest edges adjacent to the current vertex
-		std::multimap<edgeweight, node>::iterator e; 
-		for (e = neighbors[v].begin(); e != neighbors[v].end(); e++)
+		for ( node e: G->neighborRange(v) )
 		{
-			edgeweight curr_edge = G->weight(v, (*e).second);
-			if ( curr_edge > heaviest && curr_edge > ws[(*e).second] )
+			edgeweight curr_edge = G->weight(v, e);
+			if ( curr_edge > heaviest && curr_edge > ws[e] )
 			{
-				partner = (*e).second;
+				partner = e;
 				heaviest = curr_edge;
 				break;
 			}
