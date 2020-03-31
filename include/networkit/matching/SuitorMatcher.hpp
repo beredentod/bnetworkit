@@ -39,6 +39,7 @@ private:
 	int64_t z = G->upperNodeIdBound();
 	std::vector<node> suitor;
 	std::vector<edgeweight> ws;
+	std::vector< std::multimap <edgeweight, node, std::greater<edgeweight> > > neighbors;
 
 };
 
