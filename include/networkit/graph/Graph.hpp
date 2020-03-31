@@ -1099,6 +1099,42 @@ public:
     void sortEdges();
 
     /**
+     * Sorts the adjacency arrays by edgeweight.
+     */
+    template <class Compare>
+    void sortOutEdgesByWeight(Compare cmp) {
+        if (!isWeighted()) {
+            WARN("The graph is unweighted, sortEdgesByWeight would not have any effect");
+            return;
+        }
+
+        balancedParallelForNodes([&](const node u) {
+            auto &adjList = outEdges[u];
+            auto &weights = outEdgeWeights[u];
+            if (adjList.size() < 2)
+                return;
+            std::vector<index> indices(adjList.size());
+            std::vector<node> adjListCopy(adjList.size());
+            std::vector<edgeweight> weightsCopy(adjList.size());
+            index i = 0;
+            std::for_each(adjList.begin(), adjList.end(), [&](node) {
+                indices[i] = i;
+                ++i;
+            });
+            std::sort(indices.begin(), indices.end(),
+                      [&](const index x, const index y) { return cmp(weights[x], weights[y]); });
+            i = 0;
+            for (index idx : indices) {
+                adjListCopy[i] = adjList[idx];
+                weightsCopy[i] = weights[idx];
+                ++i;
+            }
+            adjList = adjListCopy;
+            weights = weightsCopy;
+        });
+    }
+
+    /**
      * Set name of graph to @a name.
      * @param name The name.
      *
