@@ -135,6 +135,7 @@ std::set<node> DynSuitorMatcher::event(GraphEvent e)
 	if (e.type == GraphEvent::EDGE_ADDITION)
 	{
 		node u = e.u, v = e.v;
+		edgeweight w = e.w;
 
 		node um = none, vm = none; //mates of u and v
 		if(M.isMatched(u))
@@ -142,28 +143,57 @@ std::set<node> DynSuitorMatcher::event(GraphEvent e)
 		if(M.isMatched(v))
 			vm = M.mate(v);	
 
-		if(um != none)
+		if(um != none && vm != none)
 		{
-			M.unmatch(u, um);
-			suitor[um] = none;
-			ws[um] = 0;
-			todo.insert(um);
+			edgeweight eW1 = G->weight(um, u);
+			edgeweight ew2 = G->weight(vm, v);
+
+			if (eW1 + ew2 < w)
+			{
+				M.unmatch(u, um);
+				suitor[um] = none;
+				suitor[u] = none;
+				ws[um] = 0;
+				ws[u] = 0;
+				todo.insert(um);
+				todo.insert(u);	
+				M.unmatch(v, vm);
+				suitor[vm] = none;
+				suitor[v] = none;
+				ws[vm] = 0;
+				ws[v] = 0;
+				todo.insert(vm);
+				todo.insert(v);			
+			}
 		}
-		if(vm != none)
+		else if(um != none)
 		{
-			M.unmatch(v, vm);
-			suitor[vm] = none;
-			ws[vm] = 0;
-			todo.insert(vm);
+			edgeweight eW = G->weight(um, u);
+			if (eW < w)
+			{
+				M.unmatch(u, um);
+				suitor[um] = none;
+				suitor[u] = none;
+				ws[um] = 0;
+				ws[u] = 0;
+				todo.insert(um);
+				todo.insert(u);				
+			}
 		}
-
-		todo.insert(u);
-		todo.insert(v);
-
-		suitor[u] = none;
-		suitor[v] = none;
-		ws[u] = 0;
-		ws[v] = 0;
+		else if(vm != none)
+		{
+			edgeweight eW = G->weight(vm, v);
+			if (eW < w)
+			{
+				M.unmatch(v, vm);
+				suitor[vm] = none;
+				suitor[v] = none;
+				ws[vm] = 0;
+				ws[v] = 0;
+				todo.insert(vm);
+				todo.insert(v);
+			}
+		}
 
 		return todo;
 	}
@@ -230,36 +260,67 @@ std::set<node> DynSuitorMatcher::event(GraphEvent e)
 	if (e.type == GraphEvent::EDGE_WEIGHT_UPDATE)
 	{
 		node u = e.u, v = e.v;
+		edgeweight w = e.w;
 
 		node um = none, vm = none; //mates of u and v
 		if(M.isMatched(u))
 			um = M.mate(u);
 		if(M.isMatched(v))
-			vm = M.mate(v);
-		
-		if(um != none)
+			vm = M.mate(v);	
+
+		if(um != none && vm != none)
 		{
-			M.unmatch(u, um);
-			suitor[um] = none;
-			ws[um] = 0;
-			todo.insert(um);
+			edgeweight eW1 = G->weight(um, u);
+			edgeweight ew2 = G->weight(vm, v);
+
+			if (eW1 + ew2 < w)
+			{
+				M.unmatch(u, um);
+				suitor[um] = none;
+				suitor[u] = none;
+				ws[um] = 0;
+				ws[u] = 0;
+				todo.insert(um);
+				todo.insert(u);	
+				M.unmatch(v, vm);
+				suitor[vm] = none;
+				suitor[v] = none;
+				ws[vm] = 0;
+				ws[v] = 0;
+				todo.insert(vm);
+				todo.insert(v);			
+			}
 		}
-		if(vm != none)
+		else if(um != none)
 		{
-			M.unmatch(v, vm);
-			suitor[vm] = none;
-			ws[vm] = 0;
-			todo.insert(vm);
+			edgeweight eW = G->weight(um, u);
+			if (eW < w)
+			{
+				M.unmatch(u, um);
+				suitor[um] = none;
+				suitor[u] = none;
+				ws[um] = 0;
+				ws[u] = 0;
+				todo.insert(um);
+				todo.insert(u);				
+			}
+		}
+		else if(vm != none)
+		{
+			edgeweight eW = G->weight(vm, v);
+			if (eW < w)
+			{
+				M.unmatch(v, vm);
+				suitor[vm] = none;
+				suitor[v] = none;
+				ws[vm] = 0;
+				ws[v] = 0;
+				todo.insert(vm);
+				todo.insert(v);
+			}
 		}
 
-		todo.insert(u);
-		todo.insert(v);
-		suitor[v] = none;
-		suitor[u] = none;
-		ws[u] = 0;
-		ws[v] = 0;
-
-		return todo;		
+		return todo;
 	}
 
 	if (e.type == GraphEvent::EDGE_WEIGHT_INCREMENT)
