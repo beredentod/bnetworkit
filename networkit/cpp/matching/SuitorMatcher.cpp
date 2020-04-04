@@ -1,123 +1,84 @@
- /*
+/*
  *  SuitorMatcher.cpp
  *
  *  Created on: 27.08.2019
  */
 
-//#include "SuitorMatcher.hpp"
-#include<networkit/matching/SuitorMatcher.hpp>
+#include <networkit/matching/SuitorMatcher.hpp>
 
 namespace NetworKit {
 
-SuitorMatcher::SuitorMatcher(Graph& G): Matcher(G)
-{
-	if (G.isDirected()) throw std::runtime_error("Matcher only defined for undirected graphs");
+SuitorMatcher::SuitorMatcher(const Graph &G) : Matcher(G) {
+    if (G.isDirected())
+        throw std::runtime_error("Matcher only defined for undirected graphs");
 
-	//preparation of the two arrays for finding suitor
-	for (int i=0; i<z; i++)
-		suitor.push_back(none);
-
-	for (int i=0; i<z; i++)
-		ws.push_back(0);
-
-	//presorted neighbors of each node
-	G.sortOutEdgesByWeight(std::greater<edgeweight>());
-
+    // preparation of the two arrays for finding suitor
+    suitor.resize(G.upperNodeIdBound(), none);
+    ws.resize(G.upperNodeIdBound(), 0);
+    neighborIterators.reserve(G.upperNodeIdBound());
+    G.forNodes([&](const node u) { neighborIterators.push_back(G.weightNeighborRange(u).begin()); });
 }
 
-count SuitorMatcher::nodesNumber()
-{
-	return G->numberOfNodes();
+std::vector<node> SuitorMatcher::retrieveSuitors() {
+    return suitor;
 }
 
-count SuitorMatcher::edgesNumber()
-{
-	return G->numberOfEdges();
+std::vector<edgeweight> SuitorMatcher::retrieveWeights() {
+    return ws;
 }
 
-std::vector<node> SuitorMatcher::retrieveSuitors()
-{
-	return suitor;
+void SuitorMatcher::findSuitor(node current) {
+    bool done = false;
+
+    do {
+
+        node partner = suitor[current];
+        edgeweight heaviest = ws[current];
+
+        for (auto &iter = neighborIterators[current]; iter != G->weightNeighborRange(current).end(); ++iter) {
+            const auto [v, weight] = *iter;
+            if (weight > heaviest && weight > ws[v]) {
+                partner = v;
+                heaviest = weight;
+                break;
+            }
+        }
+
+        done = true;
+
+        if (heaviest > 0) {
+            node y = suitor[partner];
+            suitor[partner] = current;
+            ws[partner] = heaviest;
+
+            // if the current vertex already has a suitor
+            if (y != none) {
+                current = y;
+                done = false;
+            }
+        }
+    } while (!done);
 }
 
-std::vector<edgeweight> SuitorMatcher::retrieveWeights()
-{
-	return ws;
+void SuitorMatcher::matchSuitor(node u) {
+    if (suitor[u] == none)
+        return;
+
+    node v = suitor[u];
+    assert(u != v);
+    if (!M.isMatched(u) && !M.isMatched(v)) {
+        M.match(u, v);
+    }
 }
 
-void SuitorMatcher::findSuitor(node v)
-{
-	bool done = false;
+void SuitorMatcher::run() {
+    for (auto u : G->nodeRange())
+        findSuitor(u);
 
-	node n1 = none, n2 = none; //to avoid falling into an infinite loop
+    // match vertices with its suitors
 
-	while (!done)
-	{
-		if (n2 == v)
-		{
-			return;
-		}
-
-		node partner = suitor[v];
-		edgeweight heaviest = ws[v];
-
-		//look for the heaviest edges adjacent to the current vertex
-		for ( node e: G->neighborRange(v) )
-		{
-			edgeweight curr_edge = G->weight(v, e);
-			if ( curr_edge > heaviest && curr_edge > ws[e] )
-			{
-				partner = e;
-				heaviest = curr_edge;
-				break;
-			}
-		}
-
-		done = true;
-
-		if (heaviest > 0)
-		{
-			int y = suitor[partner];
-			suitor[partner] = v;
-			ws[partner] = heaviest;
-
-			//if the current vertex already has a suitor
-			if (y != none)
-			{
-				n2 = n1;
-				n1 = v;
-				v = y;
-				done = false;
-			}
-			
-		}
-	}
+    for (auto v : G->nodeRange())
+        matchSuitor(v);
 }
-
-void SuitorMatcher::matchSuitor(node v)
-{
-	if (suitor[v] == none)
-		return;
-
-	node s = v;
-	node t = suitor[s];
-	if (!M.isMatched(s) && !M.isMatched(t) && s != t)
-	{
-		M.match(s,t);
-	}
-}
-
-void SuitorMatcher::run() 
-{
-	for (auto u: G->nodeRange())
-		findSuitor(u);
-
-	//match vertices with its suitors
-
-	for (auto v: G->nodeRange())
-		matchSuitor(v);
-
-}
-
 
 } /* namespace NetworKit */
