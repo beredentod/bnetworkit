@@ -8,7 +8,6 @@
 #ifndef SUITORMATCHER_H_
 #define SUITORMATCHER_H_
 
-#include <set>
 #include <algorithm>
 #include <vector>
 
@@ -20,26 +19,21 @@ namespace NetworKit {
  * @ingroup matching
  * Suitor matching finding algorithm
  */
-class SuitorMatcher: public Matcher {
+class SuitorMatcher final : public Matcher {
+    std::vector<node> suitor;
+    std::vector<edgeweight> ws;
+
+    void findSuitor(node u);
+    void matchSuitor(node v);
+
 public:
-	SuitorMatcher(Graph& G);
+    SuitorMatcher(const Graph &G);
 
-	void findSuitor(node u);
-	void matchSuitor(node v);
+    void run() override;
 
-	virtual void run();
-
-	count nodesNumber();
-	count edgesNumber();
-	std::vector<node> retrieveSuitors();
-	std::vector<edgeweight> retrieveWeights();
-
-
-private:
-	int64_t z = G->upperNodeIdBound();
-	std::vector<node> suitor;
-	std::vector<edgeweight> ws;
-
+    std::vector<node> retrieveSuitors();
+    std::vector<edgeweight> retrieveWeights();
+    std::vector<Graph::NeighborWeightIterator> neighborIterators;
 };
 
 } /* namespace NetworKit */
