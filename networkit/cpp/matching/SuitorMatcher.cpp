@@ -16,7 +16,8 @@ SuitorMatcher::SuitorMatcher(const Graph &G) : Matcher(G) {
     suitor.resize(G.upperNodeIdBound(), none);
     ws.resize(G.upperNodeIdBound(), 0);
     neighborIterators.reserve(G.upperNodeIdBound());
-    G.forNodes([&](const node u) { neighborIterators.push_back(G.weightNeighborRange(u).begin()); });
+    G.forNodes(
+        [&](const node u) { neighborIterators.push_back(G.weightNeighborRange(u).begin()); });
 }
 
 std::vector<node> SuitorMatcher::retrieveSuitors() {
@@ -35,11 +36,13 @@ void SuitorMatcher::findSuitor(node current) {
         node partner = suitor[current];
         edgeweight heaviest = ws[current];
 
-        for (auto &iter = neighborIterators[current]; iter != G->weightNeighborRange(current).end(); ++iter) {
+        for (auto &iter = neighborIterators[current]; iter != G->weightNeighborRange(current).end();
+             ++iter) {
             const auto [v, weight] = *iter;
             if (weight > heaviest && weight > ws[v]) {
                 partner = v;
                 heaviest = weight;
+                ++iter;
                 break;
             }
         }
@@ -72,13 +75,11 @@ void SuitorMatcher::matchSuitor(node u) {
 }
 
 void SuitorMatcher::run() {
-    for (auto u : G->nodeRange())
-        findSuitor(u);
+    G->forNodes([&](const auto u) { findSuitor(u); });
 
     // match vertices with its suitors
 
-    for (auto v : G->nodeRange())
-        matchSuitor(v);
+    G->forNodes([&](const auto u) { matchSuitor(u); });
 }
 
 } /* namespace NetworKit */

@@ -30,13 +30,20 @@ TEST_F(MatcherGTest, testSuitorMatcher) {
     G.addEdge(1, 2, 8);
     G.addEdge(1, 3, 3);
     G.addEdge(2, 3, 11);
-    //G = NetworkitBinaryReader{}.read("/home/angriman/graphs/advogato.nkb");
-    //if (!G.isWeighted())
-    //    G = GraphTools::toWeighted(G);
-    //G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::probability()); });
+    G = NetworkitBinaryReader{}.read("/home/angriman/graphs/advogato.nkb");
+    if (!G.isWeighted())
+        G = GraphTools::toWeighted(G);
+    if (G.isDirected())
+        G = GraphTools::toUndirected(G);
+    G.removeSelfLoops();
+    G.removeMultiEdges();
+    Aux::Random::setSeed(1, false);
+    G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::probability()); });
     G.sortOutEdgesByWeight(std::greater<edgeweight>());
     SuitorMatcher sm(G);
     sm.run();
+    const auto m = sm.getMatching();
+    INFO("Weight = ", m.weight(G));
 }
 
 TEST_F(MatcherGTest, testLocalMaxMatching) {
