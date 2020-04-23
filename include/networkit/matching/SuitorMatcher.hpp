@@ -19,9 +19,7 @@ namespace NetworKit {
  * @ingroup matching
  * Suitor matching finding algorithm
  */
-class SuitorMatcher final : public Matcher {
-    std::vector<node> suitor;
-    std::vector<edgeweight> ws;
+class SuitorMatcher : public Matcher {
 
     void findSuitor(node u);
     void matchSuitor(node v);
@@ -31,8 +29,8 @@ public:
 
     void run() override;
 
-    std::vector<node> retrieveSuitors();
-    std::vector<edgeweight> retrieveWeights();
+    std::vector<node> suitor;
+    std::vector<edgeweight> ws;
     std::vector<Graph::NeighborWeightIterator> neighborIterators;
 };
 

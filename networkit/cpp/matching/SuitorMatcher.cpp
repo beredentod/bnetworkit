@@ -17,15 +17,7 @@ SuitorMatcher::SuitorMatcher(const Graph &G) : Matcher(G) {
     ws.resize(G.upperNodeIdBound(), 0);
     neighborIterators.reserve(G.upperNodeIdBound());
     G.forNodes(
-        [&](const node u) { neighborIterators.push_back(G.weightNeighborRange(u).begin()); });
-}
-
-std::vector<node> SuitorMatcher::retrieveSuitors() {
-    return suitor;
-}
-
-std::vector<edgeweight> SuitorMatcher::retrieveWeights() {
-    return ws;
+        [&](const node u) { neighborIterators.emplace_back(G.weightNeighborRange(u).begin()); });
 }
 
 void SuitorMatcher::findSuitor(node current) {

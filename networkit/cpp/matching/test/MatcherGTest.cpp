@@ -13,6 +13,7 @@
 #include <networkit/io/DibapGraphReader.hpp>
 #include <networkit/io/METISGraphReader.hpp>
 #include <networkit/io/NetworkitBinaryReader.hpp>
+#include <networkit/matching/DynamicSuitorMatcher.hpp>
 #include <networkit/matching/LocalMaxMatcher.hpp>
 #include <networkit/matching/Matcher.hpp>
 #include <networkit/matching/Matching.hpp>
@@ -41,6 +42,23 @@ TEST_F(MatcherGTest, testSuitorMatcher) {
     G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::probability()); });
     G.sortOutEdgesByWeight(std::greater<edgeweight>());
     SuitorMatcher sm(G);
+    sm.run();
+    const auto m = sm.getMatching();
+    INFO("Weight = ", m.weight(G));
+}
+
+TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
+    auto G = NetworkitBinaryReader{}.read("/home/angriman/graphs/advogato.nkb");
+    if (!G.isWeighted())
+        G = GraphTools::toWeighted(G);
+    if (G.isDirected())
+        G = GraphTools::toUndirected(G);
+    G.removeSelfLoops();
+    G.removeMultiEdges();
+    Aux::Random::setSeed(1, false);
+    G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::probability()); });
+    G.sortOutEdgesByWeight(std::greater<edgeweight>());
+    DynamicSuitorMatcher sm(G);
     sm.run();
     const auto m = sm.getMatching();
     INFO("Weight = ", m.weight(G));
