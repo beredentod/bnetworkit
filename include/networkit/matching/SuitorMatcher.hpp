@@ -21,6 +21,8 @@ namespace NetworKit {
  */
 class SuitorMatcher : public Matcher {
 
+    // Original suboptimal implementation
+    void findSuitorOriginal(node u);
     void findSuitor(node u);
     void matchSuitor(node v);
 
@@ -28,6 +30,9 @@ public:
     SuitorMatcher(const Graph &G);
 
     void run() override;
+
+    // Run original suboptimal implementation
+    void runOriginal();
 
     std::vector<node> suitor;
     std::vector<edgeweight> ws;

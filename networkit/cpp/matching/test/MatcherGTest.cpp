@@ -31,7 +31,7 @@ TEST_F(MatcherGTest, testSuitorMatcher) {
     G.addEdge(1, 2, 8);
     G.addEdge(1, 3, 3);
     G.addEdge(2, 3, 11);
-    G = NetworkitBinaryReader{}.read("/home/angriman/graphs/advogato.nkb");
+    G = NetworkitBinaryReader{}.read("/work/global/angriman/graphs/advogato.nkb");
     if (!G.isWeighted())
         G = GraphTools::toWeighted(G);
     if (G.isDirected())
@@ -45,10 +45,14 @@ TEST_F(MatcherGTest, testSuitorMatcher) {
     sm.run();
     const auto m = sm.getMatching();
     INFO("Weight = ", m.weight(G));
+    SuitorMatcher sm2(G);
+    sm2.runOriginal();
+    const auto m2 = sm2.getMatching();
+    INFO("Weight = ", m2.weight(G));
 }
 
 TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
-    auto G = NetworkitBinaryReader{}.read("/home/angriman/graphs/advogato.nkb");
+    auto G = NetworkitBinaryReader{}.read("/work/global/angriman/graphs/advogato.nkb");
     if (!G.isWeighted())
         G = GraphTools::toWeighted(G);
     if (G.isDirected())
@@ -61,7 +65,21 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     DynamicSuitorMatcher sm(G);
     sm.run();
     const auto m = sm.getMatching();
-    INFO("Weight = ", m.weight(G));
+    INFO("Initial weight = ", m.weight(G));
+
+    static constexpr count insertions = 100;
+    std::vector<GraphEvent> batchInsertions;
+    batchInsertions.reserve(insertions);
+    for (count i = 0; i < insertions; ++i) {
+        node u = none, v = none;
+        do {
+            u = GraphTools::randomNode(G);
+            v = GraphTools::randomNode(G);
+        } while (!G.hasEdge(u, v));
+        const GraphEvent ge(GraphEvent::Type::NODE_ADDITION, u, v, Aux::Random::probability());
+        batchInsertions.push_back(ge);
+        G.addEdge(ge.u, ge.v, ge.w);
+    }
 }
 
 TEST_F(MatcherGTest, testLocalMaxMatching) {

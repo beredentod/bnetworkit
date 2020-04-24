@@ -1446,6 +1446,8 @@ public:
      */
     void addEdge(node u, node v, edgeweight ew = defaultEdgeWeight);
 
+//    void batchInsert(const std::vector<GraphEvent> &insertions, 
+
     /**
      * Insert an edge between the nodes @a u and @a v. Unline the addEdge function, this function
      * does not not add any information to v. If the graph is weighted you can optionally set a
