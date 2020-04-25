@@ -11,13 +11,19 @@ namespace NetworKit {
 SuitorMatcher::SuitorMatcher(const Graph &G) : Matcher(G) {
     if (G.isDirected())
         throw std::runtime_error("Matcher only defined for undirected graphs");
+}
 
+void SuitorMatcher::init() {
     // preparation of the two arrays for finding suitor
-    suitor.resize(G.upperNodeIdBound(), none);
-    ws.resize(G.upperNodeIdBound(), 0);
-    neighborIterators.reserve(G.upperNodeIdBound());
-    G.forNodes(
-        [&](const node u) { neighborIterators.emplace_back(G.weightNeighborRange(u).begin()); });
+    std::fill(suitor.begin(), suitor.end(), none);
+    suitor.resize(G->upperNodeIdBound(), none);
+    std::fill(ws.begin(), ws.end(), 0);
+    ws.resize(G->upperNodeIdBound(), 0);
+    neighborIterators.clear();
+    neighborIterators.reserve(G->upperNodeIdBound());
+    G->forNodes(
+        [&](const node u) { neighborIterators.emplace_back(G->weightNeighborRange(u).begin()); });
+    M.clear();
 }
 
 void SuitorMatcher::findSuitorOriginal(node current) {
@@ -90,22 +96,27 @@ void SuitorMatcher::matchSuitor(node u) {
     if (suitor[u] == none)
         return;
 
-    node v = suitor[u];
-    assert(u != v);
-    if (!M.isMatched(u) && !M.isMatched(v))
-        M.match(u, v);
+    if (suitor[u] != none) {
+        assert(suitor[u] != none);
+        assert(suitor[suitor[u]] == u);
+        M.match(u, suitor[u]);
+    }
 }
 
 void SuitorMatcher::run() {
+    init();
     G->forNodes([&](const auto u) { findSuitor(u); });
-
     // match vertices with its suitors
     G->forNodes([&](const auto u) { matchSuitor(u); });
 }
 
 void SuitorMatcher::runOriginal() {
+    init();
     G->forNodes([&](const auto u) { findSuitorOriginal(u); });
     // match vertices with its suitors
+#ifndef NDEBUG
+    G->forNodes([&](const auto u) { assert(!M.isMatched(u)); });
+#endif
     G->forNodes([&](const auto u) { matchSuitor(u); });
 }
 

@@ -25,6 +25,7 @@ class SuitorMatcher : public Matcher {
     void findSuitorOriginal(node u);
     void findSuitor(node u);
     void matchSuitor(node v);
+    void init();
 
 public:
     SuitorMatcher(const Graph &G);

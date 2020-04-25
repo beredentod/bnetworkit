@@ -102,6 +102,10 @@ public:
      */
     std::vector<node> getVector() const;
 
+    void clear() {
+        std::fill(data.begin(), data.end(), none);
+    }
+
 protected:
     std::vector<node> data; //!< storage of matching nodes
 };

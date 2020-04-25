@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <omp.h>
 #include <queue>
 #include <stack>
 #include <stdexcept>
@@ -24,6 +25,7 @@
 #include <networkit/Globals.hpp>
 #include <networkit/auxiliary/FunctionTraits.hpp>
 #include <networkit/auxiliary/Log.hpp>
+#include <networkit/auxiliary/Parallel.hpp>
 #include <networkit/auxiliary/Random.hpp>
 
 #include <tlx/define/deprecated.hpp>
@@ -1109,10 +1111,10 @@ public:
         }
 
         balancedParallelForNodes([&](const node u) {
+            if (degree(u) < 2)
+                return;
             auto &adjList = outEdges[u];
             auto &weights = outEdgeWeights[u];
-            if (adjList.size() < 2)
-                return;
             std::vector<index> indices(adjList.size());
             std::vector<node> adjListCopy(adjList.size());
             std::vector<edgeweight> weightsCopy(adjList.size());
@@ -1121,8 +1123,9 @@ public:
                 indices[i] = i;
                 ++i;
             });
-            std::sort(indices.begin(), indices.end(),
-                      [&](const index x, const index y) { return cmp(weights[x], weights[y]); });
+            Aux::Parallel::sort(indices.begin(), indices.end(), [&](const index x, const index y) {
+                return cmp(weights[x], weights[y]);
+            });
             i = 0;
             for (index idx : indices) {
                 adjListCopy[i] = adjList[idx];
@@ -1131,6 +1134,79 @@ public:
             }
             adjList = adjListCopy;
             weights = weightsCopy;
+        });
+    }
+
+    template <class Compare>
+    void processBatchAdditions(const std::vector<count> &additionsPerNode,
+                               std::vector<NeighborWeightIterator> &iterators, Compare cmp) {
+        count maxDeg = 0;
+#pragma omp parallel for reduction(max : maxDeg)
+        for (omp_index u = 0; u < static_cast<omp_index>(z); ++u)
+            maxDeg = std::max(maxDeg, degree(u));
+
+        std::vector<std::vector<node>> adjlistCopies(omp_get_max_threads(),
+                                                     std::vector<node>(maxDeg));
+        std::vector<std::vector<edgeweight>> weightsCopies(omp_get_max_threads(),
+                                                           std::vector<edgeweight>(maxDeg));
+        std::vector<std::vector<index>> indicesGlobal(omp_get_max_threads(),
+                                                      std::vector<index>(maxDeg));
+
+        balancedParallelForNodes([&](const auto u) {
+            const count addedNodes = additionsPerNode[u];
+            const count degU = degree(u);
+
+            if (degU < 2 || !addedNodes)
+                return;
+            auto &adjList = outEdges[u];
+            auto &weights = outEdgeWeights[u];
+            auto &adjListCopy = adjlistCopies[omp_get_thread_num()];
+            auto &weightsCopy = weightsCopies[omp_get_thread_num()];
+            adjListCopy.resize(adjList.size());
+            weightsCopy.resize(adjList.size());
+
+            if (additionsPerNode[u] > 1) {
+                // Sort newly inserted edges
+                auto &indices = indicesGlobal[omp_get_thread_num()];
+
+                indices.resize(degU);
+                for (index i = 0; i < addedNodes; ++i)
+                    indices[i] = i + degU - addedNodes;
+
+                Aux::Parallel::sort(
+                    indices.begin(), indices.end(),
+                    [&](const auto x, const auto y) { return cmp(weights[x], weights[y]); });
+                index i = 0;
+                for (index idx : indices) {
+                    adjListCopy[i] = adjList[idx];
+                    weightsCopy[i] = weights[idx];
+                    ++i;
+                }
+            }
+
+            index i = 0, j = degU - addedNodes, idx = 0;;
+            while (i < degU - addedNodes && j < degU) {
+                if (weightsCopy[i] > weightsCopy[j]) {
+                    adjList[idx] = adjListCopy[i];
+                    weights[idx] = weightsCopy[i];
+                    ++i;
+                } else {
+                    adjList[idx] = adjListCopy[j];
+                    weights[idx] = weightsCopy[j];
+                    ++j;
+                }
+                ++idx;
+            }
+
+            while (i < degU - addedNodes) {
+                adjList[idx] = adjListCopy[i];
+                weights[idx++] = weightsCopy[i++];
+            }
+
+            while (j < degU) {
+                adjList[idx] = adjListCopy[j];
+                weights[idx++] = weightsCopy[j++];
+            }
         });
     }
 
@@ -1446,19 +1522,12 @@ public:
      */
     void addEdge(node u, node v, edgeweight ew = defaultEdgeWeight);
 
-//    void batchInsert(const std::vector<GraphEvent> &insertions, 
+    template <typename T>
+    void erase(node u, index idx, std::vector<std::vector<T>> &vec) {
+        vec[u][idx] = vec[u].back();
+        vec[u].pop_back();
+    }
 
-    /**
-     * Insert an edge between the nodes @a u and @a v. Unline the addEdge function, this function
-     * does not not add any information to v. If the graph is weighted you can optionally set a
-     * weight for this edge. The default weight is 1.0. Note: Multi-edges are not supported and will
-     * NOT be handled consistently by the graph data structure.
-     * @param u Endpoint of edge.
-     * @param v Endpoint of edge.
-     * @param weight Optional edge weight.
-     * @param ew Optional edge weight.
-     * @param index Optional node index.
-     */
     void addPartialEdge(Unsafe, node u, node v, edgeweight ew = defaultEdgeWeight,
                         uint64_t index = 0);
 

@@ -62,24 +62,44 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     Aux::Random::setSeed(1, false);
     G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::probability()); });
     G.sortOutEdgesByWeight(std::greater<edgeweight>());
-    DynamicSuitorMatcher sm(G);
-    sm.run();
-    const auto m = sm.getMatching();
-    INFO("Initial weight = ", m.weight(G));
+    SuitorMatcher sm(G);
+    sm.runOriginal();
+    INFO("Original weight: ", sm.getMatching().weight(G));
+    DynamicSuitorMatcher dsm(G);
+    dsm.run();
+    INFO("Initial weight = ", dsm.getMatching().weight(G));
 
-    static constexpr count insertions = 100;
-    std::vector<GraphEvent> batchInsertions;
-    batchInsertions.reserve(insertions);
-    for (count i = 0; i < insertions; ++i) {
+    static constexpr count additions = 100;
+    std::vector<GraphEvent> batchadditions;
+    batchadditions.reserve(additions);
+    for (count i = 0; i < additions; ++i) {
         node u = none, v = none;
         do {
             u = GraphTools::randomNode(G);
             v = GraphTools::randomNode(G);
         } while (!G.hasEdge(u, v));
-        const GraphEvent ge(GraphEvent::Type::NODE_ADDITION, u, v, Aux::Random::probability());
-        batchInsertions.push_back(ge);
+        const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v, 2);
+        batchadditions.push_back(ge);
         G.addEdge(ge.u, ge.v, ge.w);
     }
+
+    dsm.insertBatch(batchadditions);
+
+    sm.runOriginal();
+    INFO("New matching original: ", sm.getMatching().weight(G));
+    sm.run();
+    INFO("New matching run: ", sm.getMatching().weight(G));
+
+    G.processBatchAdditions(dsm.additionsPerNode, dsm.neighborIterators,
+                            std::greater<edgeweight>());
+    G.forNodes([&](const auto u) {
+        edgeweight prev = std::numeric_limits<edgeweight>::max();
+        G.forNeighborsOf(u, [&](const node v, const edgeweight ew) {
+            assert(prev >= ew);
+            prev = ew;
+
+        });
+    });
 }
 
 TEST_F(MatcherGTest, testLocalMaxMatching) {
