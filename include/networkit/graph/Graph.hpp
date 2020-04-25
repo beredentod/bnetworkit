@@ -25,7 +25,6 @@
 #include <networkit/Globals.hpp>
 #include <networkit/auxiliary/FunctionTraits.hpp>
 #include <networkit/auxiliary/Log.hpp>
-#include <networkit/auxiliary/Parallel.hpp>
 #include <networkit/auxiliary/Random.hpp>
 
 #include <tlx/define/deprecated.hpp>
@@ -891,6 +890,12 @@ public:
             return tmp;
         }
 
+        NeighborWeightIterator operator+(int incr) {
+            nIter += incr;
+            wIter += incr;
+            return *this;
+        }
+
         NeighborWeightIterator operator--() {
             --nIter;
             --wIter;
@@ -1123,9 +1128,8 @@ public:
                 indices[i] = i;
                 ++i;
             });
-            Aux::Parallel::sort(indices.begin(), indices.end(), [&](const index x, const index y) {
-                return cmp(weights[x], weights[y]);
-            });
+            std::sort(indices.begin(), indices.end(),
+                      [&](const index x, const index y) { return cmp(weights[x], weights[y]); });
             i = 0;
             for (index idx : indices) {
                 adjListCopy[i] = adjList[idx];
@@ -1169,22 +1173,24 @@ public:
                 // Sort newly inserted edges
                 auto &indices = indicesGlobal[omp_get_thread_num()];
 
-                indices.resize(degU);
+                indices.resize(addedNodes);
                 for (index i = 0; i < addedNodes; ++i)
                     indices[i] = i + degU - addedNodes;
 
-                Aux::Parallel::sort(
-                    indices.begin(), indices.end(),
-                    [&](const auto x, const auto y) { return cmp(weights[x], weights[y]); });
-                index i = 0;
+                std::sort(indices.begin(), indices.end(),
+                          [&](const auto x, const auto y) { return cmp(weights[x], weights[y]); });
+                index i = degU - addedNodes;
                 for (index idx : indices) {
                     adjListCopy[i] = adjList[idx];
                     weightsCopy[i] = weights[idx];
                     ++i;
                 }
             }
+            std::copy(adjList.begin(), adjList.begin() + degU - addedNodes, adjListCopy.begin());
+            std::copy(weights.begin(), weights.begin() + degU - addedNodes, weightsCopy.begin());
 
-            index i = 0, j = degU - addedNodes, idx = 0;;
+            index i = 0, j = degU - addedNodes, idx = 0;
+
             while (i < degU - addedNodes && j < degU) {
                 if (weightsCopy[i] > weightsCopy[j]) {
                     adjList[idx] = adjListCopy[i];
