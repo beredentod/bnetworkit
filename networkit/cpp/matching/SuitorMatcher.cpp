@@ -24,7 +24,6 @@ void SuitorMatcher::init() {
     G->forNodes(
         [&](const node u) { neighborIterators.emplace_back(G->weightNeighborRange(u).begin()); });
     M.clear();
-    unmatched.clear();
 }
 
 void SuitorMatcher::findSuitorOriginal(node current) {
@@ -80,7 +79,7 @@ void SuitorMatcher::findSuitor(node current) {
 
         done = true;
 
-        if (heaviest > 0) {
+        if (partner != none && heaviest > ws[partner]) {
             node y = suitor[partner];
             suitor[partner] = current;
             ws[partner] = heaviest;
@@ -115,12 +114,7 @@ void SuitorMatcher::runOriginal() {
     G->forNodes([&](const auto u) { findSuitorOriginal(u); });
     // match vertices with its suitors
 #ifndef NDEBUG
-    G->forNodes([&](const auto u) {
-        assert(!M.isMatched(u));
-        if (unmatched.find(u) != unmatched.end()) {
-            assert(suitor[u] == none || suitor[suitor[u]] != u);
-        }
-    });
+    G->forNodes([&](const auto u) { assert(!M.isMatched(u)); });
 #endif
     G->forNodes([&](const auto u) { matchSuitor(u); });
 }

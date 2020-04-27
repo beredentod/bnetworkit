@@ -91,8 +91,8 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     SuitorMatcher sm2(G);
     sm2.runOriginal();
     INFO("New matching original: ", sm2.getMatching().weight(G));
-   // sm.run();
-   // INFO("New matching run: ", sm.getMatching().weight(G));
+    sm.run();
+    INFO("New matching run: ", sm.getMatching().weight(G));
 
     G.forNodes([&](const auto u) {
         edgeweight prev = std::numeric_limits<edgeweight>::max();
