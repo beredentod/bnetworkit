@@ -1141,80 +1141,9 @@ public:
         });
     }
 
-    template <class Compare>
     void processBatchAdditions(const std::vector<count> &additionsPerNode,
-                               std::vector<NeighborWeightIterator> &iterators, Compare cmp) {
-        count maxDeg = 0;
-#pragma omp parallel for reduction(max : maxDeg)
-        for (omp_index u = 0; u < static_cast<omp_index>(z); ++u)
-            maxDeg = std::max(maxDeg, degree(u));
-
-        std::vector<std::vector<node>> adjlistCopies(omp_get_max_threads(),
-                                                     std::vector<node>(maxDeg));
-        std::vector<std::vector<edgeweight>> weightsCopies(omp_get_max_threads(),
-                                                           std::vector<edgeweight>(maxDeg));
-        std::vector<std::vector<index>> indicesGlobal(omp_get_max_threads(),
-                                                      std::vector<index>(maxDeg));
-
-        balancedParallelForNodes([&](const auto u) {
-            const count addedNodes = additionsPerNode[u];
-            const count degU = degree(u);
-
-            if (degU < 2 || !addedNodes)
-                return;
-            auto &adjList = outEdges[u];
-            auto &weights = outEdgeWeights[u];
-            auto &adjListCopy = adjlistCopies[omp_get_thread_num()];
-            auto &weightsCopy = weightsCopies[omp_get_thread_num()];
-            adjListCopy.resize(adjList.size());
-            weightsCopy.resize(adjList.size());
-
-            if (additionsPerNode[u] > 1) {
-                // Sort newly inserted edges
-                auto &indices = indicesGlobal[omp_get_thread_num()];
-
-                indices.resize(addedNodes);
-                for (index i = 0; i < addedNodes; ++i)
-                    indices[i] = i + degU - addedNodes;
-
-                std::sort(indices.begin(), indices.end(),
-                          [&](const auto x, const auto y) { return cmp(weights[x], weights[y]); });
-                index i = degU - addedNodes;
-                for (index idx : indices) {
-                    adjListCopy[i] = adjList[idx];
-                    weightsCopy[i] = weights[idx];
-                    ++i;
-                }
-            }
-            std::copy(adjList.begin(), adjList.begin() + degU - addedNodes, adjListCopy.begin());
-            std::copy(weights.begin(), weights.begin() + degU - addedNodes, weightsCopy.begin());
-
-            index i = 0, j = degU - addedNodes, idx = 0;
-
-            while (i < degU - addedNodes && j < degU) {
-                if (weightsCopy[i] > weightsCopy[j]) {
-                    adjList[idx] = adjListCopy[i];
-                    weights[idx] = weightsCopy[i];
-                    ++i;
-                } else {
-                    adjList[idx] = adjListCopy[j];
-                    weights[idx] = weightsCopy[j];
-                    ++j;
-                }
-                ++idx;
-            }
-
-            while (i < degU - addedNodes) {
-                adjList[idx] = adjListCopy[i];
-                weights[idx++] = weightsCopy[i++];
-            }
-
-            while (j < degU) {
-                adjList[idx] = adjListCopy[j];
-                weights[idx++] = weightsCopy[j++];
-            }
-        });
-    }
+                               std::vector<NeighborWeightIterator> &iterators,
+                               const std::vector<unsigned char> &affected);
 
     /**
      * Set name of graph to @a name.

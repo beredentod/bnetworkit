@@ -82,22 +82,23 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
         batchadditions.push_back(ge);
         G.addEdge(ge.u, ge.v, ge.w);
     }
+    G.removeMultiEdges();
+    G.removeSelfLoops();
 
     dsm.insertBatch(batchadditions);
+    G.processBatchAdditions(dsm.additionsPerNode, dsm.neighborIterators, dsm.affected);
 
-    sm.runOriginal();
-    INFO("New matching original: ", sm.getMatching().weight(G));
-    sm.run();
-    INFO("New matching run: ", sm.getMatching().weight(G));
+    SuitorMatcher sm2(G);
+    sm2.runOriginal();
+    INFO("New matching original: ", sm2.getMatching().weight(G));
+   // sm.run();
+   // INFO("New matching run: ", sm.getMatching().weight(G));
 
-    G.processBatchAdditions(dsm.additionsPerNode, dsm.neighborIterators,
-                            std::greater<edgeweight>());
     G.forNodes([&](const auto u) {
         edgeweight prev = std::numeric_limits<edgeweight>::max();
         G.forNeighborsOf(u, [&](const node v, const edgeweight ew) {
             assert(prev >= ew);
             prev = ew;
-
         });
     });
 }

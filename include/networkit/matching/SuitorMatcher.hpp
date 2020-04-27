@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <unordered_set>
 
 #include <networkit/matching/Matcher.hpp>
 
@@ -26,6 +27,7 @@ class SuitorMatcher : public Matcher {
     void findSuitor(node u);
     void matchSuitor(node v);
     void init();
+    std::unordered_set<node> unmatched;
 
 public:
     SuitorMatcher(const Graph &G);

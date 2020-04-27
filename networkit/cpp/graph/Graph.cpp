@@ -390,6 +390,99 @@ void Graph::compactEdges() {
     });
 }
 
+void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode,
+                                  std::vector<NeighborWeightIterator> &iterators,
+                                  const std::vector<unsigned char> &affected) {
+    count maxDeg = 0;
+#pragma omp parallel for reduction(max : maxDeg)
+    for (omp_index u = 0; u < static_cast<omp_index>(z); ++u)
+        maxDeg = std::max(maxDeg, degree(u));
+
+    std::vector<std::vector<node>> adjlistCopies(omp_get_max_threads(), std::vector<node>(maxDeg));
+    std::vector<std::vector<edgeweight>> weightsCopies(omp_get_max_threads(),
+                                                       std::vector<edgeweight>(maxDeg));
+    std::vector<std::vector<index>> indicesGlobal(omp_get_max_threads(),
+                                                  std::vector<index>(maxDeg));
+
+    balancedParallelForNodes([&](const auto u) {
+        const count addedEdges = additionsPerNode[u];
+        const count degU = degree(u);
+
+        if (degU < 2 || !addedEdges) {
+            if (affected[u])
+                iterators[u] = weightNeighborRange(u).begin();
+            return;
+        }
+        auto &adjList = outEdges[u];
+        auto &weights = outEdgeWeights[u];
+        auto &adjListCopy = adjlistCopies[omp_get_thread_num()];
+        auto &weightsCopy = weightsCopies[omp_get_thread_num()];
+        adjListCopy.resize(adjList.size());
+        weightsCopy.resize(adjList.size());
+
+        if (additionsPerNode[u] > 1) {
+            // Sort newly inserted edges
+            auto &indices = indicesGlobal[omp_get_thread_num()];
+
+            indices.resize(addedEdges);
+            for (index i = 0; i < addedEdges; ++i)
+                indices[i] = i + degU - addedEdges;
+
+            std::sort(indices.begin(), indices.end(),
+                      [&](const auto x, const auto y) { return weights[x] > weights[y]; });
+            index i = degU - addedEdges;
+            for (index idx : indices) {
+                adjListCopy[i] = adjList[idx];
+                weightsCopy[i] = weights[idx];
+                ++i;
+            }
+        }
+        std::copy(adjList.begin(), adjList.begin() + degU - addedEdges, adjListCopy.begin());
+        std::copy(weights.begin(), weights.begin() + degU - addedEdges, weightsCopy.begin());
+
+        // Heaviest added edge
+        edgeweight heaviest = weightsCopy[degU - addedEdges];
+        for (index i = 0; i < degU - addedEdges && heaviest < weights[i]; ++i) {
+            if (affected[adjList[i]]) {
+                heaviest = weights[i];
+                break;
+            }
+        }
+
+        // Merge
+        index i = 0, j = degU - addedEdges, idx = 0;
+        while (i < degU - addedEdges && j < degU) {
+            if (weightsCopy[i] > weightsCopy[j]) {
+                adjList[idx] = adjListCopy[i];
+                weights[idx] = weightsCopy[i];
+                ++i;
+            } else {
+                adjList[idx] = adjListCopy[j];
+                weights[idx] = weightsCopy[j];
+                ++j;
+            }
+            ++idx;
+        }
+
+        while (i < degU - addedEdges) {
+            adjList[idx] = adjListCopy[i];
+            weights[idx++] = weightsCopy[i++];
+        }
+
+        while (j < degU) {
+            adjList[idx] = adjListCopy[j];
+            weights[idx++] = weightsCopy[j++];
+        }
+
+        iterators[u] = weightNeighborRange(u).begin();
+                       //+ (std::lower_bound(weights.begin(), weights.end(), heaviest,
+                       //                    [&](const auto x, const auto y) { return x > y; })
+                       //   - weights.begin());
+//        assert(iterators[u] != weightNeighborRange(u).end());
+//        assert((*(iterators[u])).second == heaviest);
+    });
+}
+
 void Graph::sortEdges() {
     std::vector<std::vector<node>> targetAdjacencies(upperNodeIdBound());
     std::vector<std::vector<edgeweight>> targetWeight;
