@@ -408,9 +408,10 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode,
         const count addedEdges = additionsPerNode[u];
         const count degU = degree(u);
 
-        iterators[u] = weightNeighborRange(u).begin();
-        if (degU < 2 || !addedEdges)
+        if (degU < 2 || !addedEdges) {
+            iterators[u] = weightNeighborRange(u).begin();
             return;
+        }
 
         auto &adjList = outEdges[u];
         auto &weights = outEdgeWeights[u];
@@ -479,6 +480,7 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode,
         //   - weights.begin());
         //        assert(iterators[u] != weightNeighborRange(u).end());
         //        assert((*(iterators[u])).second == heaviest);
+        iterators[u] = weightNeighborRange(u).begin();
     });
 }
 
