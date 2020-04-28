@@ -86,7 +86,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     G.removeSelfLoops();
 
     dsm.insertBatch(batchadditions);
-    G.processBatchAdditions(dsm.additionsPerNode, dsm.neighborIterators, dsm.affected);
+    G.processBatchAdditions(dsm.additionsPerNode, dsm.neighborIterators);
     dsm.doUpdate();
     INFO("Update matching: ", dsm.getMatching().weight(G));
 

@@ -391,8 +391,8 @@ void Graph::compactEdges() {
 }
 
 void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode,
-                                  std::vector<NeighborWeightIterator> &iterators,
-                                  const std::vector<unsigned char> &affected) {
+                                  std::vector<NeighborWeightIterator> &iterators) {
+    //                      const std::vector<unsigned char> &affected) {
     count maxDeg = 0;
 #pragma omp parallel for reduction(max : maxDeg)
     for (omp_index u = 0; u < static_cast<omp_index>(z); ++u)
@@ -439,14 +439,14 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode,
         std::copy(adjList.begin(), adjList.begin() + degU - addedEdges, adjListCopy.begin());
         std::copy(weights.begin(), weights.begin() + degU - addedEdges, weightsCopy.begin());
 
-        // Heaviest added edge
-        edgeweight heaviest = weightsCopy[degU - addedEdges];
-        for (index i = 0; i < degU - addedEdges && heaviest < weights[i]; ++i) {
-            if (affected[adjList[i]]) {
-                heaviest = weights[i];
-                break;
-            }
-        }
+        //// Heaviest added edge
+        // edgeweight heaviest = weightsCopy[degU - addedEdges];
+        // for (index i = 0; i < degU - addedEdges && heaviest < weights[i]; ++i) {
+        //    if (affected[adjList[i]]) {
+        //        heaviest = weights[i];
+        //        break;
+        //    }
+        //}
 
         // Merge
         index i = 0, j = degU - addedEdges, idx = 0;
@@ -473,14 +473,17 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode,
             weights[idx++] = weightsCopy[j++];
         }
 
-//        iterators[u] = weightNeighborRange(u).begin();
-                       //+ (std::lower_bound(weights.begin(), weights.end(), heaviest,
-                       //                    [&](const auto x, const auto y) { return x > y; })
-                       //   - weights.begin());
-//        assert(iterators[u] != weightNeighborRange(u).end());
-//        assert((*(iterators[u])).second == heaviest);
+        //        iterators[u] = weightNeighborRange(u).begin();
+        //+ (std::lower_bound(weights.begin(), weights.end(), heaviest,
+        //                    [&](const auto x, const auto y) { return x > y; })
+        //   - weights.begin());
+        //        assert(iterators[u] != weightNeighborRange(u).end());
+        //        assert((*(iterators[u])).second == heaviest);
     });
 }
+
+void Graph::processBatchRemovals(const std::vector<std::vector<index>> &removedEdges,
+                                 std::vector<NeighborWeightIterator> &iterators) {}
 
 void Graph::sortEdges() {
     std::vector<std::vector<node>> targetAdjacencies(upperNodeIdBound());

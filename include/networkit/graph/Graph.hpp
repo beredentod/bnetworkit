@@ -1142,9 +1142,11 @@ public:
     }
 
     void processBatchAdditions(const std::vector<count> &additionsPerNode,
-                               std::vector<NeighborWeightIterator> &iterators,
-                               const std::vector<unsigned char> &affected);
+                               std::vector<NeighborWeightIterator> &iterators);
+    //                               const std::vector<unsigned char> &affected);
 
+    void processBatchRemovals(const std::vector<std::vector<index>> &removedEdges,
+                              std::vector<NeighborWeightIterator> &iterators);
     /**
      * Set name of graph to @a name.
      * @param name The name.
