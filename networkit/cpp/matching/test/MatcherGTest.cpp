@@ -60,7 +60,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     G.removeSelfLoops();
     G.removeMultiEdges();
     Aux::Random::setSeed(1, false);
-    G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::probability()); });
+    G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::real(1, 20)); });
     G.sortOutEdgesByWeight(std::greater<edgeweight>());
     SuitorMatcher sm(G);
     sm.runOriginal();
@@ -69,7 +69,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     dsm.run();
     INFO("Initial weight = ", dsm.getMatching().weight(G));
 
-    static constexpr count additions = 100;
+    static constexpr count additions = 1000;
     std::vector<GraphEvent> batchadditions;
     batchadditions.reserve(additions);
     for (count i = 0; i < additions; ++i) {
@@ -78,7 +78,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
             u = GraphTools::randomNode(G);
             v = GraphTools::randomNode(G);
         } while (!G.hasEdge(u, v));
-        const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v, 2);
+        const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v, Aux::Random::real(1, 20));
         batchadditions.push_back(ge);
         G.addEdge(ge.u, ge.v, ge.w);
     }
@@ -87,6 +87,8 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
 
     dsm.insertBatch(batchadditions);
     G.processBatchAdditions(dsm.additionsPerNode, dsm.neighborIterators, dsm.affected);
+    dsm.doUpdate();
+    INFO("Update matching: ", dsm.getMatching().weight(G));
 
     SuitorMatcher sm2(G);
     sm2.runOriginal();

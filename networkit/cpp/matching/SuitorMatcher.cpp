@@ -59,7 +59,6 @@ void SuitorMatcher::findSuitorOriginal(node current) {
 
 void SuitorMatcher::findSuitor(node current) {
     bool done = false;
-    const node z = current;
 
     do {
 
@@ -113,9 +112,6 @@ void SuitorMatcher::runOriginal() {
     init();
     G->forNodes([&](const auto u) { findSuitorOriginal(u); });
     // match vertices with its suitors
-#ifndef NDEBUG
-    G->forNodes([&](const auto u) { assert(!M.isMatched(u)); });
-#endif
     G->forNodes([&](const auto u) { matchSuitor(u); });
 }
 

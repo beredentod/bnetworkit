@@ -14,13 +14,16 @@ public:
         affected.resize(G.upperNodeIdBound(), 0);
         wsPrev.resize(G.upperNodeIdBound());
         affectedNodes.reserve(G.numberOfNodes());
+        toRematch.reserve(G.numberOfNodes());
     }
 
     void insertBatch(const std::vector<GraphEvent> &additions);
+    void doUpdate();
+
     std::vector<count> additionsPerNode;
     std::vector<unsigned char> affected;
     std::vector<edgeweight> wsPrev;
-    std::vector<node> affectedNodes;
+    std::vector<node> affectedNodes, toRematch;
 };
 } // namespace NetworKit
 #endif

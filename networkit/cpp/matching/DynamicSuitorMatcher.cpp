@@ -3,6 +3,7 @@
 #include <networkit/matching/DynamicSuitorMatcher.hpp>
 
 namespace NetworKit {
+
 void DynamicSuitorMatcher::insertBatch(const std::vector<GraphEvent> &additions) {
     std::copy(ws.begin(), ws.end(), wsPrev.begin());
 
@@ -13,6 +14,7 @@ void DynamicSuitorMatcher::insertBatch(const std::vector<GraphEvent> &additions)
             ws[x] = 0;
             suitor[x] = none;
             affectedNodes.push_back(x);
+            toRematch.push_back(x);
         }
     };
 
@@ -21,7 +23,12 @@ void DynamicSuitorMatcher::insertBatch(const std::vector<GraphEvent> &additions)
         processNode(addition.u, addition.w);
         processNode(addition.v, addition.w);
     }
+}
 
-    INFO("Affected: ", affectedNodes.size());
+void DynamicSuitorMatcher::doUpdate() {
+    for (const auto u : affectedNodes)
+        findSuitor(u);
+    for (const auto u : affected)
+        matchSuitor(u);
 }
 } /* namespace NetworKit */

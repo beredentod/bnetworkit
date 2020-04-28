@@ -21,6 +21,7 @@ namespace NetworKit {
  * Suitor matching finding algorithm
  */
 class SuitorMatcher : public Matcher {
+protected:
 
     // Original suboptimal implementation
     void findSuitorOriginal(node u);
