@@ -156,11 +156,13 @@ class Graph final {
      */
     index indexInInEdgeArray(node v, node u) const;
 
+public:
     /**
      * Returns the index of node v in the array of outgoing edges of node u.
      */
     index indexInOutEdgeArray(node u, node v) const;
 
+private:
     /**
      * Computes the weighted in/out degree of node @a u.
      *
@@ -1141,12 +1143,15 @@ public:
         });
     }
 
-    void processBatchAdditions(const std::vector<count> &additionsPerNode,
+    void processBatchAdditions(const std::vector<count> &additionsPerNode, count updates,
                                std::vector<NeighborWeightIterator> &iterators);
     //                               const std::vector<unsigned char> &affected);
 
-    void processBatchRemovals(const std::vector<std::vector<index>> &removedEdges,
+    void processBatchRemovals(const std::vector<index> &heaviestRemovals,
                               std::vector<NeighborWeightIterator> &iterators);
+
+    void setHalfEdgeRemoved(node u, index idx) { outEdges[u][idx] = none; }
+    bool isEdgeRemoved(node u, index idx) const { return outEdges[u][idx] == none; }
     /**
      * Set name of graph to @a name.
      * @param name The name.
@@ -1738,7 +1743,7 @@ public:
      *
      * This method is deprecated and will not be supported in future releases.
      */
-    std::vector<node> TLX_DEPRECATED(neighbors(node u) const);
+    const std::vector<node> TLX_DEPRECATED(&neighbors(node u) const);
 
     /**
      * Get an iterable range over the nodes of the graph.
@@ -1823,11 +1828,7 @@ public:
      */
     template <bool graphIsDirected>
     node getIthNeighbor(node u, index i) const {
-        node v = outEdges[u][i];
-        if (useEdgeInIteration<graphIsDirected>(u, v))
-            return v;
-        else
-            return none;
+        return outEdges[u][i];
     }
 
     /**
@@ -1839,8 +1840,6 @@ public:
      * neighbor exists.
      */
     node getIthNeighbor(node u, index i) const {
-        if (!hasNode(u) || i >= outEdges[u].size())
-            return none;
         return outEdges[u][i];
     }
 

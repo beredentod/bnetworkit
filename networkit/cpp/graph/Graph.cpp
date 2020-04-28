@@ -390,7 +390,7 @@ void Graph::compactEdges() {
     });
 }
 
-void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode,
+void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, count totalAdditions,
                                   std::vector<NeighborWeightIterator> &iterators) {
     //                      const std::vector<unsigned char> &affected) {
     count maxDeg = 0;
@@ -436,11 +436,14 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode,
                 weightsCopy[i] = weights[idx];
                 ++i;
             }
+        } else {
+            adjListCopy.back() = adjList.back();
+            weightsCopy.back() = weights.back();
         }
         std::copy(adjList.begin(), adjList.begin() + degU - addedEdges, adjListCopy.begin());
         std::copy(weights.begin(), weights.begin() + degU - addedEdges, weightsCopy.begin());
 
-        //// Heaviest added edge
+        // Heaviest added edge
         // edgeweight heaviest = weightsCopy[degU - addedEdges];
         // for (index i = 0; i < degU - addedEdges && heaviest < weights[i]; ++i) {
         //    if (affected[adjList[i]]) {
@@ -482,10 +485,40 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode,
         //        assert((*(iterators[u])).second == heaviest);
         iterators[u] = weightNeighborRange(u).begin();
     });
+
+    m += totalAdditions;
 }
 
-void Graph::processBatchRemovals(const std::vector<std::vector<index>> &removedEdges,
-                                 std::vector<NeighborWeightIterator> &iterators) {}
+void Graph::processBatchRemovals(const std::vector<index> &heaviestRemovals,
+                                 std::vector<NeighborWeightIterator> &iterators) {
+    balancedParallelForNodes([&](const auto u) {
+        iterators[u] = weightNeighborRange(u).begin();
+        const auto heaviestRemoval = heaviestRemovals[u];
+        if (heaviestRemoval == none) {
+            iterators[u] = weightNeighborRange(u).begin();
+            return;
+        }
+
+        auto &adjList = outEdges[u];
+        auto &weights = outEdgeWeights[u];
+
+        count removals = 1;
+        index idx = heaviestRemoval;
+        for (index i = heaviestRemoval + 1; i < degree(u); ++i) {
+            if (adjList[i] == none) {
+                ++removals;
+            } else {
+                adjList[idx] = adjList[i];
+                weights[idx] = weights[i];
+                ++idx;
+            }
+        }
+
+        adjList.resize(adjList.size() - removals);
+        weights.resize(weights.size() - removals);
+        iterators[u] = weightNeighborRange(u).begin();
+    });
+}
 
 void Graph::sortEdges() {
     std::vector<std::vector<node>> targetAdjacencies(upperNodeIdBound());
@@ -1073,11 +1106,8 @@ std::vector<std::pair<node, node>> Graph::edges() const {
     return edges;
 }
 
-std::vector<node> Graph::neighbors(node u) const {
-    std::vector<node> neighbors;
-    neighbors.reserve(degree(u));
-    this->forNeighborsOf(u, [&](node v) { neighbors.push_back(v); });
-    return neighbors;
+const std::vector<node> &Graph::neighbors(node u) const {
+    return outEdges[u];
 }
 
 Graph Graph::transpose() const {

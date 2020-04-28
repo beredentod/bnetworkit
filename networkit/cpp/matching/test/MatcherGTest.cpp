@@ -69,38 +69,96 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     dsm.run();
     INFO("Initial weight = ", dsm.getMatching().weight(G));
 
-    static constexpr count additions = 1000;
+    static constexpr count updates = 1000;
     std::vector<GraphEvent> batchadditions;
-    batchadditions.reserve(additions);
-    for (count i = 0; i < additions; ++i) {
+    batchadditions.reserve(updates);
+    std::vector<count> prevDegree(G.upperNodeIdBound(), 0);
+    G.forNodes([&](const auto u) { prevDegree[u] = G.degree(u); });
+    for (count i = 0; i < updates; ++i) {
         node u = none, v = none;
         do {
             u = GraphTools::randomNode(G);
             v = GraphTools::randomNode(G);
-        } while (!G.hasEdge(u, v));
+        } while (u == v || G.hasEdge(u, v));
+        assert(G.indexInOutEdgeArray(u, v) == none);
+        assert(G.indexInOutEdgeArray(v, u) == none);
         const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v, Aux::Random::real(1, 20));
         batchadditions.push_back(ge);
         G.addEdge(ge.u, ge.v, ge.w);
     }
-    G.removeMultiEdges();
-    G.removeSelfLoops();
 
     dsm.insertBatch(batchadditions);
-    G.processBatchAdditions(dsm.additionsPerNode, dsm.neighborIterators);
+    G.processBatchAdditions(dsm.additionsPerNode, updates, dsm.neighborIterators);
+    G.forNodes([&](const auto u) {
+        std::unordered_set<node> set;
+        G.forNeighborsOf(u, [&](const node v) {
+            bool found = false;
+            for (const auto w : G.neighborRange(v)) {
+                if (u == w) {
+                    found = true;
+                    break;
+                }
+            }
+            assert(found);
+            set.insert(v);
+        });
+        if (set.size() != G.degree(u))
+            INFO(G.neighbors(u));
+        assert(set.size() == G.degree(u));
+    });
     dsm.doUpdate();
     INFO("Update matching: ", dsm.getMatching().weight(G));
 
-    SuitorMatcher sm2(G);
+    DynamicSuitorMatcher sm2(G);
     sm2.runOriginal();
     INFO("New matching original: ", sm2.getMatching().weight(G));
-    sm.run();
-    INFO("New matching run: ", sm.getMatching().weight(G));
+    sm2.run();
+    INFO("New matching run: ", sm2.getMatching().weight(G));
 
     G.forNodes([&](const auto u) {
         edgeweight prev = std::numeric_limits<edgeweight>::max();
         G.forNeighborsOf(u, [&](const node v, const edgeweight ew) {
             assert(prev >= ew);
             prev = ew;
+        });
+    });
+
+    std::vector<index> heaviestRemovals(G.upperNodeIdBound(), none);
+    // TODO we should use a biased distribution when picking u (proportional to the degree)
+    for (count i = 0; i < updates; ++i) {
+        node u, v;
+        do {
+            u = GraphTools::randomNode(G);
+            if (G.degree(u) == 0)
+                continue;
+            index idx = Aux::Random::integer(0, G.degree(u) - 1);
+            v = G.getIthNeighbor(u, idx);
+        } while (u == v || v == none);
+
+        if (!G.hasEdge(u, v)) {
+            INFO(G.indexInOutEdgeArray(u, v));
+            INFO(G.indexInOutEdgeArray(v, u));
+        }
+        assert(G.hasEdge(u, v));
+
+        const index uIdx = G.indexInOutEdgeArray(u, v);
+        const index vIdx = G.indexInOutEdgeArray(v, u);
+        assert(uIdx != none);
+        assert(vIdx != none);
+        heaviestRemovals[u] = std::min(heaviestRemovals[u], uIdx);
+        heaviestRemovals[v] = std::min(heaviestRemovals[v], vIdx);
+        G.setHalfEdgeRemoved(u, uIdx);
+        G.setHalfEdgeRemoved(v, vIdx);
+    }
+
+    G.processBatchRemovals(heaviestRemovals, sm2.neighborIterators);
+    G.forNodes([&](const auto u) {
+        edgeweight prev = std::numeric_limits<edgeweight>::max();
+        G.forNeighborsOf(u, [&](const node v, const edgeweight weight) {
+            assert(G.hasEdge(v, u));
+            assert(v != none);
+            assert(weight <= prev);
+            prev = weight;
         });
     });
 }
