@@ -489,7 +489,7 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
     m += totalAdditions;
 }
 
-void Graph::processBatchRemovals(const std::vector<index> &heaviestRemovals,
+void Graph::processBatchRemovals(const std::vector<index> &heaviestRemovals, count totalRemovals,
                                  std::vector<NeighborWeightIterator> &iterators) {
     balancedParallelForNodes([&](const auto u) {
         iterators[u] = weightNeighborRange(u).begin();
@@ -518,6 +518,7 @@ void Graph::processBatchRemovals(const std::vector<index> &heaviestRemovals,
         weights.resize(weights.size() - removals);
         iterators[u] = weightNeighborRange(u).begin();
     });
+    m -= totalRemovals;
 }
 
 void Graph::sortEdges() {

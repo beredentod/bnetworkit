@@ -134,11 +134,6 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
             index idx = Aux::Random::integer(0, G.degree(u) - 1);
             v = G.getIthNeighbor(u, idx);
         } while (u == v || v == none);
-
-        if (!G.hasEdge(u, v)) {
-            INFO(G.indexInOutEdgeArray(u, v));
-            INFO(G.indexInOutEdgeArray(v, u));
-        }
         assert(G.hasEdge(u, v));
 
         const index uIdx = G.indexInOutEdgeArray(u, v);
@@ -151,7 +146,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
         G.setHalfEdgeRemoved(v, vIdx);
     }
 
-    G.processBatchRemovals(heaviestRemovals, sm2.neighborIterators);
+    G.processBatchRemovals(heaviestRemovals, updates, sm2.neighborIterators);
     G.forNodes([&](const auto u) {
         edgeweight prev = std::numeric_limits<edgeweight>::max();
         G.forNeighborsOf(u, [&](const node v, const edgeweight weight) {

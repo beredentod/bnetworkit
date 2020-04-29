@@ -14,7 +14,6 @@ void DynamicSuitorMatcher::insertBatch(const std::vector<GraphEvent> &additions)
             ws[x] = 0;
             suitor[x] = none;
             affectedNodes.push_back(x);
-            toRematch.push_back(x);
         }
     };
 
@@ -28,7 +27,7 @@ void DynamicSuitorMatcher::insertBatch(const std::vector<GraphEvent> &additions)
 void DynamicSuitorMatcher::doUpdate() {
     for (const auto u : affectedNodes)
         findSuitor(u);
-    for (const auto u : affected)
+    for (const auto u : affectedNodes)
         matchSuitor(u);
 }
 } /* namespace NetworKit */

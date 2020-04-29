@@ -1147,7 +1147,7 @@ public:
                                std::vector<NeighborWeightIterator> &iterators);
     //                               const std::vector<unsigned char> &affected);
 
-    void processBatchRemovals(const std::vector<index> &heaviestRemovals,
+    void processBatchRemovals(const std::vector<index> &heaviestRemovals, count updates,
                               std::vector<NeighborWeightIterator> &iterators);
 
     void setHalfEdgeRemoved(node u, index idx) { outEdges[u][idx] = none; }
