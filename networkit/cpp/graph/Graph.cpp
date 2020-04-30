@@ -428,8 +428,10 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
             for (index i = 0; i < addedEdges; ++i)
                 indices[i] = i + degU - addedEdges;
 
-            std::sort(indices.begin(), indices.end(),
-                      [&](const auto x, const auto y) { return weights[x] > weights[y]; });
+            std::sort(indices.begin(), indices.end(), [&](const auto x, const auto y) -> bool {
+                const bool sameWeight = weights[x] == weights[y];
+                return (sameWeight && x < y) || (!sameWeight && weights[x] > weights[y]);
+            });
             index i = degU - addedEdges;
             for (index idx : indices) {
                 adjListCopy[i] = adjList[idx];

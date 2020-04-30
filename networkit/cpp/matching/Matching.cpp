@@ -11,7 +11,7 @@ namespace NetworKit {
 Matching::Matching(count z) : data(z, none) {}
 
 bool Matching::isMatched(node u) const {
-    return (this->data.at(u) != none);
+    return data[u] != none;
 }
 
 bool Matching::isProper(const Graph& G) const {
@@ -50,13 +50,13 @@ bool Matching::isProper(const Graph& G) const {
 }
 
 void Matching::match(node u, node v) {
-    data.at(u) = v;
-    data.at(v) = u;
+    data[u] = v;
+    data[v] = u;
 }
 
 void Matching::unmatch(node u, node v) {
-    data.at(u) = none;
-    data.at(v) = none;
+    data[u] = none;
+    data[v] = none;
 }
 
 bool Matching::areMatched(node u, node v) const {
@@ -74,7 +74,7 @@ count Matching::size(const Graph& G) const {
 }
 
 index Matching::mate(node v) const {
-    return data.at(v);
+    return data[v];
 }
 
 edgeweight Matching::weight(const Graph& G) const {
