@@ -1079,10 +1079,10 @@ public:
 
     /**
      * Return the type of the graph.
-     * 		Graph: not weighted, undirected
-     * 		WeightedGraph: weighted, undirected
-     * 		DirectedGraph: not weighted, directed
-     * 		WeightedDirectedGraph: weighted, directed
+     *      Graph: not weighted, undirected
+     *      WeightedGraph: weighted, undirected
+     *      DirectedGraph: not weighted, directed
+     *      WeightedDirectedGraph: weighted, directed
      *
      * This method is deprecated and will not be supported in future releases.
      */
@@ -1692,9 +1692,9 @@ public:
      * Set the weight of an edge. If the edge does not exist,
      * it will be inserted.
      *
-     * @param[in]	u	endpoint of edge
-     * @param[in]	v	endpoint of edge
-     * @param[in]	weight	edge weight
+     * @param[in]   u   endpoint of edge
+     * @param[in]   v   endpoint of edge
+     * @param[in]   weight  edge weight
      */
     void setWeight(node u, node v, edgeweight ew);
 
@@ -1702,9 +1702,9 @@ public:
      * Increase the weight of an edge. If the edge does not exist,
      * it will be inserted.
      *
-     * @param[in]	u	endpoint of edge
-     * @param[in]	v	endpoint of edge
-     * @param[in]	weight	edge weight
+     * @param[in]   u   endpoint of edge
+     * @param[in]   v   endpoint of edge
+     * @param[in]   weight  edge weight
      */
     void increaseWeight(node u, node v, edgeweight ew);
 
