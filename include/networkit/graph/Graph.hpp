@@ -1126,12 +1126,14 @@ public:
             std::vector<node> adjListCopy(adjList.size());
             std::vector<edgeweight> weightsCopy(adjList.size());
             index i = 0;
-            std::for_each(adjList.begin(), adjList.end(), [&](node) {
+            std::for_each(adjList.begin(), adjList.end(), [&](auto) {
                 indices[i] = i;
                 ++i;
             });
-            std::sort(indices.begin(), indices.end(),
-                      [&](const index x, const index y) { return cmp(weights[x], weights[y]); });
+            std::sort(indices.begin(), indices.end(), [&](const auto x, const auto y) -> bool {
+                const bool sameWeight = weights[x] == weights[y];
+                return (sameWeight && x < y) || (!sameWeight && cmp(weights[x], weights[y]));
+            });
             i = 0;
             for (index idx : indices) {
                 adjListCopy[i] = adjList[idx];
@@ -1838,9 +1840,7 @@ public:
      * @return @a i -th (outgoing) neighbor of @a u, or @c none if no such
      * neighbor exists.
      */
-    node getIthNeighbor(node u, index i) const {
-        return outEdges[u][i];
-    }
+    node getIthNeighbor(node u, index i) const { return outEdges[u][i]; }
 
     /* Derivative Graphs */
 
