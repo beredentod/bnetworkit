@@ -1132,7 +1132,7 @@ public:
             });
             std::sort(indices.begin(), indices.end(), [&](const auto x, const auto y) -> bool {
                 const bool sameWeight = weights[x] == weights[y];
-                return (sameWeight && x < y) || (!sameWeight && cmp(weights[x], weights[y]));
+                return (sameWeight && adjList[x] < adjList[y]) || (!sameWeight && cmp(weights[x], weights[y]));
             });
             i = 0;
             for (index idx : indices) {

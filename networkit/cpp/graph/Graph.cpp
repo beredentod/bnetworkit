@@ -393,10 +393,9 @@ void Graph::compactEdges() {
 void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, count totalAdditions,
                                   std::vector<NeighborWeightIterator> &iterators) {
     //                      const std::vector<unsigned char> &affected) {
-    count maxDeg = 0;
-#pragma omp parallel for reduction(max : maxDeg)
-    for (omp_index u = 0; u < static_cast<omp_index>(z); ++u)
-        maxDeg = std::max(maxDeg, degree(u));
+    const count maxDeg =
+        *std::max_element(nodeRange().begin(), nodeRange().end(),
+                          [&](const auto u, const auto v) { return degree(u) < degree(v); });
 
     std::vector<std::vector<node>> adjlistCopies(omp_get_max_threads(), std::vector<node>(maxDeg));
     std::vector<std::vector<edgeweight>> weightsCopies(omp_get_max_threads(),
@@ -420,7 +419,7 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
         adjListCopy.resize(adjList.size());
         weightsCopy.resize(adjList.size());
 
-        if (additionsPerNode[u] > 1) {
+        if (addedEdges > 1) {
             // Sort newly inserted edges
             auto &indices = indicesGlobal[omp_get_thread_num()];
 
@@ -430,20 +429,33 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
 
             std::sort(indices.begin(), indices.end(), [&](const auto x, const auto y) -> bool {
                 const bool sameWeight = weights[x] == weights[y];
-                return (sameWeight && x < y) || (!sameWeight && weights[x] > weights[y]);
+                return (sameWeight && adjList[x] < adjList[y])
+                       || (!sameWeight && weights[x] > weights[y]);
             });
+            if (u == 1521)
+                INFO("indices of 1521: ", indices);
             index i = degU - addedEdges;
-            for (index idx : indices) {
+            for (const index idx : indices) {
                 adjListCopy[i] = adjList[idx];
                 weightsCopy[i] = weights[idx];
                 ++i;
             }
         } else {
+            assert(addedEdges == 1);
+            if (u == 1521) {
+                INFO("adjList of 1521 single add: ", adjList);
+            }
             adjListCopy.back() = adjList.back();
             weightsCopy.back() = weights.back();
+            if (u == 1521) {
+                INFO("adjListCopy of 1521 single add: ", adjListCopy);
+            }
         }
         std::copy(adjList.begin(), adjList.begin() + degU - addedEdges, adjListCopy.begin());
         std::copy(weights.begin(), weights.begin() + degU - addedEdges, weightsCopy.begin());
+        if (u == 1521) {
+            INFO("adjListCopy of 1521 single: ", adjListCopy);
+        }
 
         // Heaviest added edge
         // edgeweight heaviest = weightsCopy[degU - addedEdges];
@@ -454,10 +466,16 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
         //    }
         //}
 
+        auto compare = [&](const auto x, const auto y) -> bool {
+            const bool sameWeight = weightsCopy[x] == weightsCopy[y];
+            return (sameWeight && adjListCopy[x] < adjListCopy[y])
+                   || (!sameWeight && weightsCopy[x] > weightsCopy[y]);
+        };
+
         // Merge
         index i = 0, j = degU - addedEdges, idx = 0;
         while (i < degU - addedEdges && j < degU) {
-            if (weightsCopy[i] > weightsCopy[j]) {
+            if (compare(i, j)) {
                 adjList[idx] = adjListCopy[i];
                 weights[idx] = weightsCopy[i];
                 ++i;
@@ -477,6 +495,9 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
         while (j < degU) {
             adjList[idx] = adjListCopy[j];
             weights[idx++] = weightsCopy[j++];
+        }
+        if (u == 1521) {
+            INFO("adjListCopy of 1521 single: ", adjListCopy);
         }
 
         //        iterators[u] = weightNeighborRange(u).begin();

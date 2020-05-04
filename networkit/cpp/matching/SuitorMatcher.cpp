@@ -4,6 +4,7 @@
  *  Created on: 27.08.2019
  */
 
+#include <networkit/auxiliary/Log.hpp>
 #include <networkit/matching/SuitorMatcher.hpp>
 
 namespace NetworKit {
@@ -103,9 +104,15 @@ void SuitorMatcher::matchSuitor(node u) {
 
 void SuitorMatcher::run() {
     init();
+#ifndef NDEBUG
+    checkSortedEdges();
+#endif
     G->forNodes([&](const auto u) { findSuitor(u); });
     // match vertices with its suitors
     G->forNodes([&](const auto u) { matchSuitor(u); });
+#ifndef NDEBUG
+    checkMaching();
+#endif
 }
 
 void SuitorMatcher::runOriginal() {
@@ -113,6 +120,40 @@ void SuitorMatcher::runOriginal() {
     G->forNodes([&](const auto u) { findSuitorOriginal(u); });
     // match vertices with its suitors
     G->forNodes([&](const auto u) { matchSuitor(u); });
+#ifndef NDEBUG
+    checkMaching();
+#endif
 }
+
+#ifndef NDEBUG
+void SuitorMatcher::checkMaching() const {
+    G->forNodes([&](const auto u) {
+        if (M.isMatched(u))
+            return;
+        G->forNeighborsOf(u, [&](const node v) {
+            if (!M.isMatched(v))
+                INFO("Error, ", u, " not matched and its neighbor ", v, " is not matched");
+            assert(M.isMatched(v));
+        });
+    });
+}
+
+void SuitorMatcher::checkSortedEdges() const {
+    G->forNodes([&](const auto u) {
+        edgeweight prev = std::numeric_limits<edgeweight>::max();
+        node prevNode = none;
+        G->forNeighborsOf(u, [&](const node v, const edgeweight w) {
+            assert(prev >= w);
+            if (prev == w && prevNode != none) {
+                if (prevNode >= v)
+                    INFO("error, prev node ", prevNode, " vs ", v);
+                assert(prevNode < v);
+            }
+            prev = w;
+            prevNode = v;
+        });
+    });
+}
+#endif
 
 } /* namespace NetworKit */

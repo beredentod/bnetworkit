@@ -25,9 +25,16 @@ protected:
 
     // Original suboptimal implementation
     void findSuitorOriginal(node u);
+    // Implementation with sorted adjlists
     void findSuitor(node u);
     void matchSuitor(node v);
     void init();
+
+#ifndef NDEBUG
+    // Debugging methods
+    void checkMaching() const;
+    void checkSortedEdges() const;
+#endif
 
 public:
     SuitorMatcher(const Graph &G);

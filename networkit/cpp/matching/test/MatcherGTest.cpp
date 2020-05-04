@@ -53,18 +53,13 @@ TEST_F(MatcherGTest, testSuitorMatcher) {
 
 TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     auto G = NetworkitBinaryReader{}.read("/work/global/angriman/graphs/advogato.nkb");
-    if (!G.isWeighted())
-        G = GraphTools::toWeighted(G);
     if (G.isDirected())
         G = GraphTools::toUndirected(G);
     G.removeSelfLoops();
     G.removeMultiEdges();
     Aux::Random::setSeed(1, false);
-    G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::real(1, 20)); });
+    G.forEdges([&](node u, node v) { G.setWeight(u, v, 1.); }); // Aux::Random::real(1, 20)); });
     G.sortOutEdgesByWeight(std::greater<edgeweight>());
-    SuitorMatcher sm(G);
-    sm.runOriginal();
-    INFO("Original weight: ", sm.getMatching().weight(G));
     DynamicSuitorMatcher dsm(G);
     dsm.run();
     INFO("Initial weight = ", dsm.getMatching().weight(G));
@@ -90,7 +85,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
         ++additionsPerNode[v];
     }
 
-    dsm.insertBatch(batchadditions);
+    dsm.findAffectedAfterEdgeAdditions(batchadditions);
     G.processBatchAdditions(additionsPerNode, updates, dsm.neighborIterators);
     G.forNodes([&](const auto u) {
         std::unordered_set<node> set;
@@ -149,7 +144,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
         removals.emplace_back(GraphEvent::Type::EDGE_REMOVAL, u, v);
     }
 
-    dsm.removeBatch(removals);
+    dsm.findAffectedAfterEdgeRemovals(removals);
     count prevM = G.numberOfEdges();
     G.processBatchRemovals(heaviestRemovals, updates, dsm.neighborIterators);
     G.forNodes([&](const auto u) {
