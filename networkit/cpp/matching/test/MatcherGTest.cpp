@@ -95,16 +95,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
 
         assert(G.indexInOutEdgeArray(u, v) == none);
         assert(G.indexInOutEdgeArray(v, u) == none);
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-        const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v, Aux::Random::real(1, 20));
-=======
         const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v);//, Aux::Random::real(1, 20));
->>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
-=======
-        const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v);//, Aux::Random::real(1, 20));
->>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
         batchadditions.push_back(ge);
         G.addEdge(ge.u, ge.v, ge.w);
         ++additionsPerNode[u];

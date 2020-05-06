@@ -392,16 +392,6 @@ void Graph::compactEdges() {
 
 void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, count totalAdditions,
                                   std::vector<NeighborWeightIterator> &iterators) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    //                      const std::vector<unsigned char> &affected) {
-    count maxDeg = 0;
-#pragma omp parallel for reduction(max : maxDeg)
-    for (omp_index u = 0; u < static_cast<omp_index>(z); ++u)
-        maxDeg = std::max(maxDeg, degree(u));
-=======
-=======
->>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
     const count maxDeg =
         *std::max_element(nodeRange().begin(), nodeRange().end(),
                           [&](const auto u, const auto v) { return degree(u) < degree(v); });
@@ -451,10 +441,6 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
 <<<<<<< HEAD
 =======
             assert(addedEdges == 1);
-<<<<<<< HEAD
->>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
-=======
->>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
             adjListCopy.back() = adjList.back();
             weightsCopy.back() = weights.back();
         }
