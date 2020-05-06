@@ -29,6 +29,15 @@ protected:
     void matchSuitor(node v);
     void init();
 
+<<<<<<< HEAD
+=======
+#ifndef NDEBUG
+    // Debugging methods
+    void checkMatching() const;
+    void checkSortedEdges() const;
+#endif
+
+>>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
 public:
     SuitorMatcher(const Graph &G);
 
@@ -40,6 +49,7 @@ public:
     std::vector<node> suitor;
     std::vector<edgeweight> ws;
     std::vector<Graph::NeighborWeightIterator> neighborIterators;
+    std::vector<unsigned char> affected;
 };
 
 } /* namespace NetworKit */

@@ -22,7 +22,6 @@ public:
     void removeBatch(const std::vector<GraphEvent> &removals);
     void doUpdate();
 
-    std::vector<unsigned char> affected;
     std::vector<edgeweight> wsPrev;
     std::vector<node> affectedNodes;
 };

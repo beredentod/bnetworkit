@@ -68,7 +68,8 @@ void SuitorMatcher::findSuitor(node current) {
         for (auto &iter = neighborIterators[current]; iter != G->weightNeighborRange(current).end();
              ++iter) {
             const auto [v, weight] = *iter;
-            if (weight > heaviest && weight > ws[v]) {
+            if (weight >= heaviest
+                && (weight > ws[v] || (weight == ws[v] && current < suitor[v]))) {
                 partner = v;
                 heaviest = weight;
                 ++iter;
@@ -78,8 +79,9 @@ void SuitorMatcher::findSuitor(node current) {
 
         done = true;
 
-        if (partner != none && heaviest > ws[partner]) {
-            node y = suitor[partner];
+        if (partner != none
+            && (heaviest > ws[partner] || (heaviest == ws[partner] && current < suitor[partner]))) {
+            const node y = suitor[partner];
             suitor[partner] = current;
             ws[partner] = heaviest;
 
@@ -106,6 +108,12 @@ void SuitorMatcher::run() {
     G->forNodes([&](const auto u) { findSuitor(u); });
     // match vertices with its suitors
     G->forNodes([&](const auto u) { matchSuitor(u); });
+<<<<<<< HEAD
+=======
+#ifndef NDEBUG
+    checkMatching();
+#endif
+>>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
 }
 
 void SuitorMatcher::runOriginal() {
@@ -113,6 +121,46 @@ void SuitorMatcher::runOriginal() {
     G->forNodes([&](const auto u) { findSuitorOriginal(u); });
     // match vertices with its suitors
     G->forNodes([&](const auto u) { matchSuitor(u); });
+<<<<<<< HEAD
 }
 
 } /* namespace NetworKit */
+=======
+#ifndef NDEBUG
+    checkMatching();
+#endif
+}
+
+#ifndef NDEBUG
+void SuitorMatcher::checkMatching() const {
+    G->forNodes([&](const auto u) {
+        if (M.isMatched(u))
+            return;
+        G->forNeighborsOf(u, [&](const node v) {
+            if (!M.isMatched(v))
+                INFO("Error, ", u, " not matched and its neighbor ", v, " is not matched");
+            assert(M.isMatched(v));
+        });
+    });
+}
+
+void SuitorMatcher::checkSortedEdges() const {
+    G->forNodes([&](const auto u) {
+        edgeweight prev = std::numeric_limits<edgeweight>::max();
+        node prevNode = none;
+        G->forNeighborsOf(u, [&](const node v, const edgeweight w) {
+            assert(prev >= w);
+            if (prev == w && prevNode != none) {
+                if (prevNode >= v)
+                    INFO("error, prev node ", prevNode, " vs ", v);
+                assert(prevNode < v);
+            }
+            prev = w;
+            prevNode = v;
+        });
+    });
+}
+#endif
+
+} /* namespace NetworKit */
+>>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
