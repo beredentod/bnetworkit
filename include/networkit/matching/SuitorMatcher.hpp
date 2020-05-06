@@ -32,7 +32,7 @@ protected:
 
 #ifndef NDEBUG
     // Debugging methods
-    void checkMaching() const;
+    void checkMatching() const;
     void checkSortedEdges() const;
 #endif
 
@@ -47,6 +47,7 @@ public:
     std::vector<node> suitor;
     std::vector<edgeweight> ws;
     std::vector<Graph::NeighborWeightIterator> neighborIterators;
+    std::vector<unsigned char> affected;
 };
 
 } /* namespace NetworKit */

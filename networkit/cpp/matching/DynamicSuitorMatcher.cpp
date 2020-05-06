@@ -67,6 +67,6 @@ void DynamicSuitorMatcher::doUpdate() {
         findSuitor(u);
     for (const auto u : affectedNodes)
         matchSuitor(u);
-    checkMaching();
+    checkMatching();
 }
 } /* namespace NetworKit */

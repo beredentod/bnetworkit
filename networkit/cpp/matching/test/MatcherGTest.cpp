@@ -78,7 +78,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
         } while (u == v || G.hasEdge(u, v));
         assert(G.indexInOutEdgeArray(u, v) == none);
         assert(G.indexInOutEdgeArray(v, u) == none);
-        const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v, Aux::Random::real(1, 20));
+        const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v);//, Aux::Random::real(1, 20));
         batchadditions.push_back(ge);
         G.addEdge(ge.u, ge.v, ge.w);
         ++additionsPerNode[u];

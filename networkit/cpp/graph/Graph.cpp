@@ -392,7 +392,6 @@ void Graph::compactEdges() {
 
 void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, count totalAdditions,
                                   std::vector<NeighborWeightIterator> &iterators) {
-    //                      const std::vector<unsigned char> &affected) {
     const count maxDeg =
         *std::max_element(nodeRange().begin(), nodeRange().end(),
                           [&](const auto u, const auto v) { return degree(u) < degree(v); });
@@ -432,8 +431,6 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
                 return (sameWeight && adjList[x] < adjList[y])
                        || (!sameWeight && weights[x] > weights[y]);
             });
-            if (u == 1521)
-                INFO("indices of 1521: ", indices);
             index i = degU - addedEdges;
             for (const index idx : indices) {
                 adjListCopy[i] = adjList[idx];
@@ -442,20 +439,11 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
             }
         } else {
             assert(addedEdges == 1);
-            if (u == 1521) {
-                INFO("adjList of 1521 single add: ", adjList);
-            }
             adjListCopy.back() = adjList.back();
             weightsCopy.back() = weights.back();
-            if (u == 1521) {
-                INFO("adjListCopy of 1521 single add: ", adjListCopy);
-            }
         }
         std::copy(adjList.begin(), adjList.begin() + degU - addedEdges, adjListCopy.begin());
         std::copy(weights.begin(), weights.begin() + degU - addedEdges, weightsCopy.begin());
-        if (u == 1521) {
-            INFO("adjListCopy of 1521 single: ", adjListCopy);
-        }
 
         // Heaviest added edge
         // edgeweight heaviest = weightsCopy[degU - addedEdges];
@@ -495,9 +483,6 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
         while (j < degU) {
             adjList[idx] = adjListCopy[j];
             weights[idx++] = weightsCopy[j++];
-        }
-        if (u == 1521) {
-            INFO("adjListCopy of 1521 single: ", adjListCopy);
         }
 
         //        iterators[u] = weightNeighborRange(u).begin();

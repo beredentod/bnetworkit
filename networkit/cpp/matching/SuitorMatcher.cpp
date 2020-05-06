@@ -69,7 +69,8 @@ void SuitorMatcher::findSuitor(node current) {
         for (auto &iter = neighborIterators[current]; iter != G->weightNeighborRange(current).end();
              ++iter) {
             const auto [v, weight] = *iter;
-            if (weight > heaviest && weight > ws[v]) {
+            if (weight >= heaviest
+                && (weight > ws[v] || (weight == ws[v] && current < suitor[v]))) {
                 partner = v;
                 heaviest = weight;
                 ++iter;
@@ -79,8 +80,9 @@ void SuitorMatcher::findSuitor(node current) {
 
         done = true;
 
-        if (partner != none && heaviest > ws[partner]) {
-            node y = suitor[partner];
+        if (partner != none
+            && (heaviest > ws[partner] || (heaviest == ws[partner] && current < suitor[partner]))) {
+            const node y = suitor[partner];
             suitor[partner] = current;
             ws[partner] = heaviest;
 
@@ -111,7 +113,7 @@ void SuitorMatcher::run() {
     // match vertices with its suitors
     G->forNodes([&](const auto u) { matchSuitor(u); });
 #ifndef NDEBUG
-    checkMaching();
+    checkMatching();
 #endif
 }
 
@@ -121,12 +123,12 @@ void SuitorMatcher::runOriginal() {
     // match vertices with its suitors
     G->forNodes([&](const auto u) { matchSuitor(u); });
 #ifndef NDEBUG
-    checkMaching();
+    checkMatching();
 #endif
 }
 
 #ifndef NDEBUG
-void SuitorMatcher::checkMaching() const {
+void SuitorMatcher::checkMatching() const {
     G->forNodes([&](const auto u) {
         if (M.isMatched(u))
             return;
