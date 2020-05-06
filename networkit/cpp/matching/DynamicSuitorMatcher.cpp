@@ -65,6 +65,10 @@ void DynamicSuitorMatcher::doUpdate() {
     for (const auto u : affectedNodes)
         matchSuitor(u);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+    checkMatching();
+>>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
 =======
     checkMatching();
 >>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
