@@ -493,8 +493,6 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
         //        assert((*(iterators[u])).second == heaviest);
         iterators[u] = weightNeighborRange(u).begin();
     });
-
-    m += totalAdditions;
 }
 
 void Graph::processBatchRemovals(const std::vector<index> &heaviestRemovals, count totalRemovals,

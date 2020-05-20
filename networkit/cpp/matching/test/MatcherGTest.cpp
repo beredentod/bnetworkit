@@ -69,6 +69,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     batchadditions.reserve(updates);
     std::vector<count> prevDegree(G.upperNodeIdBound(), 0);
     G.forNodes([&](const auto u) { prevDegree[u] = G.degree(u); });
+    count prevM = G.numberOfEdges();
     std::vector<count> additionsPerNode(G.upperNodeIdBound(), 0);
     for (count i = 0; i < updates; ++i) {
         node u = none, v = none;
@@ -87,6 +88,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
 
     dsm.findAffectedAfterEdgeAdditions(batchadditions);
     G.processBatchAdditions(additionsPerNode, updates, dsm.neighborIterators);
+    assert(G.numberOfEdges() == prevM + updates);
     G.forNodes([&](const auto u) {
         std::unordered_set<node> set;
         G.forNeighborsOf(u, [&](const node v) {
@@ -145,7 +147,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     }
 
     dsm.findAffectedAfterEdgeRemovals(removals);
-    count prevM = G.numberOfEdges();
+    prevM = G.numberOfEdges();
     G.processBatchRemovals(heaviestRemovals, updates, dsm.neighborIterators);
     G.forNodes([&](const auto u) {
         edgeweight prev = std::numeric_limits<edgeweight>::max();
