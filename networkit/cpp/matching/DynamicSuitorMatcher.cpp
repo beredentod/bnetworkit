@@ -12,7 +12,7 @@ void DynamicSuitorMatcher::setAffected(node u) {
     affectedNodes.push_back(u);
 }
 
-void DynamicSuitorMatcher::insertBatch(const std::vector<GraphEvent> &additions) {
+void DynamicSuitorMatcher::findAffectedAfterEdgeAdditions(const std::vector<GraphEvent> &additions) {
     std::copy(ws.begin(), ws.end(), wsPrev.begin());
 
     auto processNode = [&](const node u, const node v, const edgeweight weight) {
@@ -27,7 +27,7 @@ void DynamicSuitorMatcher::insertBatch(const std::vector<GraphEvent> &additions)
     }
 }
 
-void DynamicSuitorMatcher::removeBatch(const std::vector<GraphEvent> &removals) {
+void DynamicSuitorMatcher::findAffectedAfterEdgeRemovals(const std::vector<GraphEvent> &removals) {
     std::copy(ws.begin(), ws.end(), wsPrev.begin());
 
     // Called at most once per node
@@ -60,10 +60,16 @@ void DynamicSuitorMatcher::removeBatch(const std::vector<GraphEvent> &removals) 
 }
 
 void DynamicSuitorMatcher::doUpdate() {
+#ifndef NDEBUG
+    checkSortedEdges();
+#endif
     for (const auto u : affectedNodes)
         findSuitor(u);
     for (const auto u : affectedNodes)
         matchSuitor(u);
+#ifndef NDEBUG
     checkMatching();
+#endif
 }
+
 } /* namespace NetworKit */

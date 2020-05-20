@@ -4,6 +4,7 @@
  *  Created on: 27.08.2019
  */
 
+#include <networkit/auxiliary/Log.hpp>
 #include <networkit/matching/SuitorMatcher.hpp>
 
 namespace NetworKit {
@@ -105,15 +106,15 @@ void SuitorMatcher::matchSuitor(node u) {
 
 void SuitorMatcher::run() {
     init();
+#ifndef NDEBUG
+    checkSortedEdges();
+#endif
     G->forNodes([&](const auto u) { findSuitor(u); });
     // match vertices with its suitors
     G->forNodes([&](const auto u) { matchSuitor(u); });
-<<<<<<< HEAD
-=======
 #ifndef NDEBUG
     checkMatching();
 #endif
->>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
 }
 
 void SuitorMatcher::runOriginal() {
@@ -121,11 +122,6 @@ void SuitorMatcher::runOriginal() {
     G->forNodes([&](const auto u) { findSuitorOriginal(u); });
     // match vertices with its suitors
     G->forNodes([&](const auto u) { matchSuitor(u); });
-<<<<<<< HEAD
-}
-
-} /* namespace NetworKit */
-=======
 #ifndef NDEBUG
     checkMatching();
 #endif
@@ -163,4 +159,3 @@ void SuitorMatcher::checkSortedEdges() const {
 #endif
 
 } /* namespace NetworKit */
->>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight

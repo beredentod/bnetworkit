@@ -18,8 +18,8 @@ public:
         affectedNodes.reserve(G.numberOfNodes());
     }
 
-    void insertBatch(const std::vector<GraphEvent> &additions);
-    void removeBatch(const std::vector<GraphEvent> &removals);
+    void findAffectedAfterEdgeAdditions(const std::vector<GraphEvent> &additions);
+    void findAffectedAfterEdgeRemovals(const std::vector<GraphEvent> &removals);
     void doUpdate();
 
     std::vector<edgeweight> wsPrev;

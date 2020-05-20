@@ -25,30 +25,24 @@ namespace NetworKit {
 class MatcherGTest : public testing::Test {};
 
 TEST_F(MatcherGTest, testSuitorMatcher) {
-
     Graph G(4, true, false);
     G.addEdge(0, 1, 6);
     G.addEdge(0, 2, 5);
     G.addEdge(1, 2, 8);
     G.addEdge(1, 3, 3);
     G.addEdge(2, 3, 11);
-
-    G = NetworkitBinaryReader{}.read("/home/michalboron/graphs/dimacs9-NY.nkb");
+    G = NetworkitBinaryReader{}.read("/home/michalboron/graphs/advogato.nkb");
     if (!G.isWeighted())
         G = GraphTools::toWeighted(G);
     if (G.isDirected())
         G = GraphTools::toUndirected(G);
-
     G.removeSelfLoops();
     G.removeMultiEdges();
     Aux::Random::setSeed(1, false);
-
     G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::probability()); });
     G.sortOutEdgesByWeight(std::greater<edgeweight>());
-
     SuitorMatcher sm(G);
     sm.run();
-
     const auto m = sm.getMatching();
     INFO("Weight = ", m.weight(G));
     SuitorMatcher sm2(G);
@@ -58,41 +52,31 @@ TEST_F(MatcherGTest, testSuitorMatcher) {
 }
 
 TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
-    auto G = NetworkitBinaryReader{}.read("/home/michalboron/graphs/dimacs9-NY.nkb");
-    if (!G.isWeighted())
-        G = GraphTools::toWeighted(G);
+
+    auto G = NetworkitBinaryReader{}.read("/home/michalboron/graphs/dimacs9-FLA.nkb");
     if (G.isDirected())
         G = GraphTools::toUndirected(G);
     G.removeSelfLoops();
     G.removeMultiEdges();
     Aux::Random::setSeed(1, false);
-    G.forEdges([&](node u, node v) { G.setWeight(u, v, Aux::Random::real(1, 20)); });
+    G.forEdges([&](node u, node v) { G.setWeight(u, v, 1.); }); // Aux::Random::real(1, 20)); });
     G.sortOutEdgesByWeight(std::greater<edgeweight>());
-
-    
-    SuitorMatcher sm(G);
-    sm.runOriginal();
-    INFO("Original weight: ", sm.getMatching().weight(G));
     DynamicSuitorMatcher dsm(G);
     dsm.run();
     INFO("Initial weight = ", dsm.getMatching().weight(G));
 
     static constexpr count updates = 1000;
-    
     std::vector<GraphEvent> batchadditions;
     batchadditions.reserve(updates);
     std::vector<count> prevDegree(G.upperNodeIdBound(), 0);
     G.forNodes([&](const auto u) { prevDegree[u] = G.degree(u); });
     std::vector<count> additionsPerNode(G.upperNodeIdBound(), 0);
-
     for (count i = 0; i < updates; ++i) {
-
         node u = none, v = none;
         do {
             u = GraphTools::randomNode(G);
             v = GraphTools::randomNode(G);
         } while (u == v || G.hasEdge(u, v));
-
         assert(G.indexInOutEdgeArray(u, v) == none);
         assert(G.indexInOutEdgeArray(v, u) == none);
         const GraphEvent ge(GraphEvent::Type::EDGE_ADDITION, u, v);//, Aux::Random::real(1, 20));
@@ -102,7 +86,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
         ++additionsPerNode[v];
     }
 
-    dsm.insertBatch(batchadditions);
+    dsm.findAffectedAfterEdgeAdditions(batchadditions);
     G.processBatchAdditions(additionsPerNode, updates, dsm.neighborIterators);
     G.forNodes([&](const auto u) {
         std::unordered_set<node> set;
@@ -161,7 +145,7 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
         removals.emplace_back(GraphEvent::Type::EDGE_REMOVAL, u, v);
     }
 
-    dsm.removeBatch(removals);
+    dsm.findAffectedAfterEdgeRemovals(removals);
     count prevM = G.numberOfEdges();
     G.processBatchRemovals(heaviestRemovals, updates, dsm.neighborIterators);
     G.forNodes([&](const auto u) {

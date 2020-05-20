@@ -25,19 +25,17 @@ protected:
 
     // Original suboptimal implementation
     void findSuitorOriginal(node u);
+    // Implementation with sorted adjlists
     void findSuitor(node u);
     void matchSuitor(node v);
     void init();
 
-<<<<<<< HEAD
-=======
 #ifndef NDEBUG
     // Debugging methods
     void checkMatching() const;
     void checkSortedEdges() const;
 #endif
 
->>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
 public:
     SuitorMatcher(const Graph &G);
 
@@ -53,4 +51,5 @@ public:
 };
 
 } /* namespace NetworKit */
+
 #endif /* SUITORMATCHER_H_ */

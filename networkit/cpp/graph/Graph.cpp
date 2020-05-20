@@ -395,7 +395,6 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
     const count maxDeg =
         *std::max_element(nodeRange().begin(), nodeRange().end(),
                           [&](const auto u, const auto v) { return degree(u) < degree(v); });
->>>>>>> 879882fd9... Implement new tests, sort by edge id if same weight
 
     std::vector<std::vector<node>> adjlistCopies(omp_get_max_threads(), std::vector<node>(maxDeg));
     std::vector<std::vector<edgeweight>> weightsCopies(omp_get_max_threads(),
@@ -438,8 +437,6 @@ void Graph::processBatchAdditions(const std::vector<count> &additionsPerNode, co
                 ++i;
             }
         } else {
-<<<<<<< HEAD
-=======
             assert(addedEdges == 1);
             adjListCopy.back() = adjList.back();
             weightsCopy.back() = weights.back();
