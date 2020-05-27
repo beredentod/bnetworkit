@@ -71,4 +71,5 @@ void DynamicSuitorMatcher::doUpdate() {
     checkMatching();
 #endif
 }
+
 } /* namespace NetworKit */

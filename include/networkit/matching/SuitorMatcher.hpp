@@ -51,4 +51,5 @@ public:
 };
 
 } /* namespace NetworKit */
+
 #endif /* SUITORMATCHER_H_ */

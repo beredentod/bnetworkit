@@ -31,7 +31,7 @@ TEST_F(MatcherGTest, testSuitorMatcher) {
     G.addEdge(1, 2, 8);
     G.addEdge(1, 3, 3);
     G.addEdge(2, 3, 11);
-    G = NetworkitBinaryReader{}.read("/work/global/angriman/graphs/advogato.nkb");
+    G = NetworkitBinaryReader{}.read("/home/michalboron/graphs/advogato.nkb");
     if (!G.isWeighted())
         G = GraphTools::toWeighted(G);
     if (G.isDirected())
@@ -52,7 +52,12 @@ TEST_F(MatcherGTest, testSuitorMatcher) {
 }
 
 TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
+<<<<<<< HEAD
     auto G = NetworkitBinaryReader{}.read("/work/global/angriman/graphs/advogato.nkb");
+=======
+
+    auto G = NetworkitBinaryReader{}.read("/home/michalboron/graphs/dimacs9-FLA.nkb");
+>>>>>>> c2c0bde9c21aab45d73ccace90ccc6cdfe743f11
     if (G.isDirected())
         G = GraphTools::toUndirected(G);
     G.removeSelfLoops();
@@ -147,7 +152,11 @@ TEST_F(MatcherGTest, testDynamicSuitorMatcher) {
     }
 
     dsm.findAffectedAfterEdgeRemovals(removals);
+<<<<<<< HEAD
     prevM = G.numberOfEdges();
+=======
+    count prevM = G.numberOfEdges();
+>>>>>>> c2c0bde9c21aab45d73ccace90ccc6cdfe743f11
     G.processBatchRemovals(heaviestRemovals, updates, dsm.neighborIterators);
     G.forNodes([&](const auto u) {
         edgeweight prev = std::numeric_limits<edgeweight>::max();

@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+
+Name: networkit
+Description: networkit
+URL: http://networkit.github.io
+Version: 6.0
+Cflags: -I${includedir} -fsanitize=address,undefined 
+Libs: -L${libdir} -lnetworkit
